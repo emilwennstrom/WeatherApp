@@ -10,16 +10,17 @@ data class WeatherData2(
     val timezone_abbreviation: String,
     val elevation: Double,
     val daily_units: Map<String, String>, // Map to handle the units
-    val daily: DailyWeatherData
+    val daily: DailyWeatherData2
 )
 
-data class DailyWeatherData(
+data class DailyWeatherData2(
     val time: List<String>,
     val temperature_2m_max: List<Double>,
     val rain_sum: List<Double>,
     val showers_sum: List<Double>,
     val snowfall_sum: List<Double>
 )
+
 data class WeatherData(
     val latitude: Double,
     val longitude: Double,
@@ -34,16 +35,12 @@ data class WeatherData(
 
 data class DailyUnits(
     val time: String,
-    val temperature_2m_max: String,
-    val rain_sum: String,
-    val showers_sum: String,
-    val snowfall_sum: String
+    val weather_code: String,
+    val temperature_2m_max: String
 )
 
 data class DailyWeather(
     val time: List<String>,
-    val temperature_2m_max: List<Double>,
-    val rain_sum: List<Double>,
-    val showers_sum: List<Double>,
-    val snowfall_sum: List<Double>
+    val weather_code: List<Int>,
+    val temperature_2m_max: List<Double>
 )

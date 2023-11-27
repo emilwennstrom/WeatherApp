@@ -35,7 +35,7 @@ private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
     Column{
         Button(
             modifier = Modifier
-                .padding(horizontal = 42.dp)
+                .padding(42.dp)
                 .weight(0.1f),
             onClick = {
                 vm.getWeatherNextSevenDays()

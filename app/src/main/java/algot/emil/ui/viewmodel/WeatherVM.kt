@@ -24,6 +24,7 @@ class WeatherVM() : ViewModel(), WeatherViewModel {
         get() = _name
 
     public fun getWeatherNextSevenDays(){
+        Log.d("GetWeatherResults: ", "inside getWeatherNextSevenDays")
         val quotesApi = RetrofitHelper.getInstance().create(QuotesApi::class.java)
         // launching a new coroutine
         GlobalScope.launch {
