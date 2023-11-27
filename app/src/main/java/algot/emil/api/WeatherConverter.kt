@@ -37,6 +37,9 @@ class WeatherConverter {
         }
     }
 
+    /**
+     * converts WeatherData-object parsed from API to a display-friendly version of weatherdata: "DailyWeatherDisplay"
+     */
     fun ConvertWeatherDataToVM(weatherData: WeatherData): List<DailyWeatherDisplay>{
         val displayList = mutableListOf<DailyWeatherDisplay>()
         for (index in weatherData.daily.time.indices) {

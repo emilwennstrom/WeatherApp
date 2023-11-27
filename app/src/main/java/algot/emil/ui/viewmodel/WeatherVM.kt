@@ -2,6 +2,7 @@ package algot.emil.ui.viewmodel
 
 import algot.emil.api.WeatherApi
 import algot.emil.api.RetrofitHelper
+import algot.emil.api.WeatherConverter
 import algot.emil.model.WeatherModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -29,9 +30,17 @@ class WeatherVM() : ViewModel(), WeatherViewModel {
         GlobalScope.launch {
             Log.d("GetWeatherResults: ", "starting API call")
             val result = weatherApi.getQuotes()
-            if (result != null)
+            if (result != null){
                 // Checking the results
                 Log.d("GetWeatherResults: ", result.body().toString())
+                if (result.isSuccessful && result.body() != null) {
+                    val weatherData = result.body()!!  // Extract WeatherData from the response
+                    val result2 = WeatherConverter().ConvertWeatherDataToVM(weatherData)
+                    Log.d("GetWeatherResults:", "list of result converted: "+ result2.toString())
+                } else {
+                    // Handle unsuccessful response or null body
+                }
+            }
             else{
                 Log.d("GetWeatherResults:", result)
             }
