@@ -1,6 +1,5 @@
 package algot.emil
 
-import algot.emil.ui.screen.Greeting
 import algot.emil.ui.screen.WeatherScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
