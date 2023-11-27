@@ -40,7 +40,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     }
 
 
-    
+
 
 
 }

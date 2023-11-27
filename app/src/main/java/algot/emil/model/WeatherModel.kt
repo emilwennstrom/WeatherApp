@@ -10,15 +10,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class WeatherModel(context: Context) {
-    private val database by lazy { AppDatabase.getDatabase(context) }
-    private val weatherRepository by lazy { WeatherRepository(database.weatherDao()) }
+    //private val database by lazy { AppDatabase.getDatabase(context) }
+    //private val weatherRepository by lazy { WeatherRepository(database.weatherDao()) }
 
-    val allWeather: Flow<List<Weather>> = weatherRepository.allWeather
+    //val allWeather: Flow<List<Weather>> = weatherRepository.allWeather
 
 
     @OptIn(DelicateCoroutinesApi::class)
     fun insert(weather: Weather) = GlobalScope.launch {
-        weatherRepository.insert(weather)
+        //weatherRepository.insert(weather)
     }
 
 
