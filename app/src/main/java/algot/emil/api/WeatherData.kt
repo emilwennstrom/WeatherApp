@@ -1,5 +1,7 @@
 package algot.emil.api
 
+import algot.emil.enums.Weather
+
 
 data class WeatherData(
     val latitude: Double,
@@ -23,4 +25,13 @@ data class DailyWeather(
     val time: List<String>,
     val weather_code: List<Int>,
     val temperature_2m_max: List<Double>
+)
+
+/**
+ * data class used for displaying the data in view-model.
+ */
+data class DailyWeatherDisplay(
+    val time: String,
+    val weather_code: Weather,
+    val temperature_2m_max: Double
 )
