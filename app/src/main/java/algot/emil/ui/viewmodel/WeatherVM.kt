@@ -3,6 +3,7 @@ package algot.emil.ui.viewmodel
 import algot.emil.api.QuotesApi
 import algot.emil.api.RetrofitHelper
 import algot.emil.model.WeatherModel
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.GlobalScope
@@ -15,7 +16,7 @@ interface WeatherViewModel{
 
 }
 
-class WeatherVM : ViewModel(), WeatherViewModel {
+class WeatherVM() : ViewModel(), WeatherViewModel {
 
     private val weatherModel: WeatherModel = WeatherModel() // Skapa en instans av WeatherModel
     private val _name = MutableStateFlow("Algot")
