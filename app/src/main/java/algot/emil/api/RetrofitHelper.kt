@@ -4,8 +4,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitHelper {
 
-    val baseUrl = "https://quotable.io/"
-
+    //val baseUrl = "https://quotable.io/"
+    val baseUrl =  "https://api.open-meteo.com"
     fun getInstance(): Retrofit {
         return Retrofit.Builder().baseUrl(baseUrl)
             .addConverterFactory(GsonConverterFactory.create())

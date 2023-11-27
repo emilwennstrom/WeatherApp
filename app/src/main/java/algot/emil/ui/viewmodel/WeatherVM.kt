@@ -27,6 +27,7 @@ class WeatherVM() : ViewModel(), WeatherViewModel {
         val quotesApi = RetrofitHelper.getInstance().create(QuotesApi::class.java)
         // launching a new coroutine
         GlobalScope.launch {
+            Log.d("GetWeatherResults: ", "starting API call")
             val result = quotesApi.getQuotes()
             if (result != null)
                 // Checking the results

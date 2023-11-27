@@ -6,7 +6,6 @@ import algot.emil.persistence.AppDatabase;
 
 public class WeatherModel {
 
-
     private final AppDatabase db = null;
 
     public WeatherModel() {
@@ -20,4 +19,7 @@ public class WeatherModel {
     }
 
 
+    public void getWeatherNextSevenDays(){
+
+    }
 }

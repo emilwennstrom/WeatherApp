@@ -64,6 +64,7 @@ dependencies {
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     // GSON
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("androidx.room:room-common:2.6.0")
     // coroutine
 
     val coroutinesVersion = "1.6.4"
