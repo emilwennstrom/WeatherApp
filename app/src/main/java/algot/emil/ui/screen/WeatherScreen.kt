@@ -49,7 +49,6 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 
 @Composable
 private fun PortraitScreen(vm: WeatherVM) {
-    Greeting(name = "tja")
     val isLoading = vm.isLoading.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -57,6 +56,9 @@ private fun PortraitScreen(vm: WeatherVM) {
     }
 
     Column {
+        Text(
+            text = "Weather Forecast"
+        )
         Column(
             modifier = Modifier
                 .padding(42.dp)
@@ -192,7 +194,7 @@ private fun WeatherForSevenDays(vm: WeatherVM, index: Int) {
 @Composable
 private fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
-        text = "Hello $name!",
+        text = "$name",
         modifier = modifier
     )
 }
