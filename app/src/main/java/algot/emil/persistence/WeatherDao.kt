@@ -14,6 +14,9 @@ interface WeatherDao {
     @Query(value = "SELECT * FROM weather")
     fun getAll(): Flow<List<Weather>>
 
+    @Query(value = "SELECT * FROM weather WHERE id = :id")
+    fun get(id: Long) : Flow<Weather>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(weather: Weather): Long
 

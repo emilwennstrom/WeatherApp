@@ -8,24 +8,24 @@ import algot.emil.api.WeatherApi
 import algot.emil.api.WeatherConverter
 import algot.emil.persistence.Weather
 import android.util.Log
+import kotlinx.coroutines.flow.Flow
 
 class WeatherModel(persistenceContext: PersistenceContext) {
     private val weatherDao = persistenceContext.weatherDao
     val allWeather = weatherDao.getAll()
+
+
     var weatherDisplay: List<DailyWeatherDisplay> ?= null
     var displayUnit: DailyUnits?= null
 
     var temperatureUnit: String?="C"
 
-    suspend fun insert(weather: Weather){
-        Log.d("TAG", weather.time)
-        weatherDao.insert(weather)
-    }
+
 
     suspend fun fetchWeatherNextSevenDays(): Boolean {
         val weatherApi = RetrofitHelper.getInstance().create(WeatherApi::class.java)
         Log.d("GetWeatherResults: ", "starting API call")
-        val result = weatherApi.getDailyWeatherForSevenDays()
+        val result = weatherApi.getDailyWeatherForSevenDays( 52.52F, 13.41F)
         // Checking the results
         Log.d("GetWeatherResults: ", result.body().toString())
         if (result.isSuccessful && result.body() != null) {
@@ -53,6 +53,13 @@ class WeatherModel(persistenceContext: PersistenceContext) {
             weatherDao.insert(weather = Weather(id = dayNumber++, time = weather.time, weatherState = weather.weather_State_code, temperature = weather.temperature_2m_max))
         }
     }
+
+    suspend fun insert(weather: Weather){
+        Log.d("TAG", weather.time)
+        weatherDao.insert(weather)
+    }
+
+    fun getWeather(id: Long): Flow<Weather> = weatherDao.get(id)
 
 
 }
