@@ -43,7 +43,7 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()){
 @Composable
 private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
 
-
+    val temperatureUnit by vm.temperatureUnit.collectAsState()
 
     Column{
         Column (modifier = Modifier
@@ -71,7 +71,7 @@ private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
                     .height(48.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "test")
+                Text(text = "$temperatureUnit")
             }
         }
         Column (modifier = Modifier

@@ -44,7 +44,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     val dailyWeather: StateFlow<List<DailyWeatherDisplay>> //what weather-information to display from today to 7 days forward with daily updates
         get() = _dailyWeather
 
-    private val _temperatureUnit = MutableStateFlow<String>("") //for example, C (celsius) or F (fahrenheit)
+    private val _temperatureUnit = MutableStateFlow<String>("C?") //for example, C (celsius) or F (fahrenheit)
     val temperatureUnit: StateFlow<String>
         get() = _temperatureUnit
 
