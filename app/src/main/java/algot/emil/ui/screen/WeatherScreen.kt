@@ -8,8 +8,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,10 +60,7 @@ private fun PortraitScreen(vm: WeatherVM) {
                 .weight(0.8f)
         ) {
             if (!isLoading.value) {
-                Row {
-
-                    WeatherForSevenDays(vm = vm, 1)
-                }
+               ListTest(vm = vm)
             }
         }
         Column(
@@ -77,10 +78,12 @@ private fun PortraitScreen(vm: WeatherVM) {
 
             }
         }
-        val allWeather by vm.allWeather.collectAsState(initial = listOf())
-        Text(text = allWeather.toString())
+        //val allWeather by vm.allWeather.collectAsState(initial = listOf())
+        //Text(text = allWeather.toString())
+
     }
 }
+
 
 
 @Composable
@@ -88,14 +91,27 @@ private fun LandscapeScreen(vm: WeatherVM) {
     Greeting(name = "horisonetelll ")
 }
 
-
 @Composable
-private fun WeatherForSevenDays(vm: WeatherVM, index: Int) {
+private fun ListTest(vm: WeatherVM) {
     val allWeather by vm.allWeather.collectAsState(initial = listOf())
     val temperatureUnit by vm.temperatureUnit.collectAsState()
-    vm.loadDayOfWeek(index)
-    val currentDay by vm.dayOfWeek.collectAsState()
 
+    LazyColumn {
+        items(allWeather) { weather ->
+            Row {
+                Text(text = weather.time+ " ")
+                weatherImage(vm = vm, weatherState =weather.weatherState.toString() )
+                Text(text = weather.temperature.toString() + temperatureUnit)
+            }
+            Spacer(modifier = Modifier
+                .width(8.dp)
+                .height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun weatherImage(vm: WeatherVM, weatherState: String){
     Box(
         modifier = Modifier
             .height(48.dp),
@@ -108,7 +124,36 @@ private fun WeatherForSevenDays(vm: WeatherVM, index: Int) {
         )
         // Foreground image
         Image(
-            painter = painterResource(R.drawable.sunny_24px),
+            painter = painterResource(getPictureName(weatherState)),
+            contentDescription = weatherState
+        )
+    }
+}
+
+
+
+@Composable
+private fun WeatherForSevenDays(vm: WeatherVM, index: Int) {
+    val allWeather by vm.allWeather.collectAsState(initial = listOf())
+    val temperatureUnit by vm.temperatureUnit.collectAsState()
+    vm.loadDayOfWeek(index)
+    val currentDay by vm.dayOfWeek.collectAsState()
+    val test by vm.dailyWeather.collectAsState()
+
+    Row{
+    Box(
+        modifier = Modifier
+            .height(48.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Background image
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_background),
+            contentDescription = "Background"
+        )
+        // Foreground image
+        Image(
+            painter = painterResource(R.drawable.sunny),
             contentDescription = "Sunny Weather"
         )
     }
@@ -117,11 +162,12 @@ private fun WeatherForSevenDays(vm: WeatherVM, index: Int) {
             .height(48.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = " $temperatureUnit")
+        Text(text = "${test.get(index).temperature_2m_max}  $temperatureUnit\n")
+        Text(text = "${test.get(index).time}")
     }
 
-    Text(text = " $currentDay}")
-
+    //Text(text = " $currentDay}")
+    }
 }
 
 @Composable
@@ -138,5 +184,26 @@ private fun Greeting(name: String, modifier: Modifier = Modifier) {
 private fun GreetingPreview() {
     WeatherAppTheme {
         WeatherScreen()
+    }
+}
+
+/*
+ClearSky, MainlyClear, PartlyCloudy, Overcast, RainSlight, RainModerate, RainHeavy,
+   Snow, Thunderstorm, Fog, Other
+ */
+private fun getPictureName(weatherState: String):Int{
+    return when (weatherState){
+        "ClearSky" -> R.drawable.sunny
+        "MainlyClear" -> R.drawable.sunny
+        "PartlyCloudy" -> R.drawable.partly_cloudy_day
+        "Overcast" -> R.drawable.cloud
+        "RainSlight" ->R.drawable.rainy_light
+        "RainModerate" -> R.drawable.rainy_heavy
+        "RainHeavy" -> R.drawable.rainy_heavy
+        "Snow" ->R.drawable.snowing_heavy
+        "Thunderstorm" -> R.drawable.thunderstorm
+        "Fog" -> R.drawable.sunny //TODO: lägg till fog
+        "Other" -> R.drawable.sunny //TODO: ???
+        else -> R.drawable.sunny //TODO: ändra??
     }
 }
