@@ -57,6 +57,7 @@ private fun PortraitScreen(vm: WeatherVM) {
         ) {
             if (!isLoading.value) {
                 Row {
+
                     WeatherForSevenDays(vm = vm, 1)
                 }
             }
