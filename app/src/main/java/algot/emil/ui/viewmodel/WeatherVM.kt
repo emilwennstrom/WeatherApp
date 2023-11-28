@@ -4,6 +4,7 @@ import algot.emil.api.DailyWeatherDisplay
 import algot.emil.api.RetrofitHelper
 import algot.emil.api.WeatherConverter
 import algot.emil.api.WeatherApi
+import algot.emil.enums.Weather
 import algot.emil.model.WeatherModel
 import android.annotation.SuppressLint
 import android.app.Application
@@ -30,7 +31,13 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     val name: StateFlow<String>
         get() = _name
 
-  //  private val _dailyWeather = MutableStateFlow<DailyWeatherDisplay>()
+    private val _dailyWeather = MutableStateFlow(DailyWeatherDisplay(
+        time = "2023-11-28", // Default value
+        weather_code = Weather.ClearSky, // Default Weather value
+        temperature_2m_max = 0.0 // Default temperature
+    ))
+    val dailyWeather: StateFlow<DailyWeatherDisplay>
+        get() = _dailyWeather
 
     fun getWeatherNextSevenDays() {
         Log.d("GetWeatherResults: ", "inside getWeatherNextSevenDays")
