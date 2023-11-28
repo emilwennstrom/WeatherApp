@@ -71,6 +71,14 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         }
     }
 
+    fun getWeatherHourly() {
+        viewModelScope.launch { // launching a new coroutine
+            if(weatherModel.fetchWeatherNextHours()){
+                //TODO: implement
+            }
+        }
+    }
+
     fun loadDayOfWeek(dayOfWeek: Int) {
         viewModelScope.launch {
             weatherModel.getWeather(dayOfWeek.toLong()).collect {

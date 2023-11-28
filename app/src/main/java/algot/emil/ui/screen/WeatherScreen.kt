@@ -75,6 +75,7 @@ private fun PortraitScreen(vm: WeatherVM) {
         ) {
             Button(onClick = {
                 vm.getWeatherNextSevenDays()
+                vm.getWeatherHourly()
             }) {
                 Text(
                     text = "Get Weather"

@@ -17,7 +17,7 @@ private interface IWeatherApi {
     suspend fun getHourlyWeatherByDaysAndByCoordinates(
         @Query("latitude") latitude: Float,
         @Query("longitude") longitude: Float,
-        @Query("hourly") daily: String = "hourly=temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m",
+        @Query("hourly") daily: String = "temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m",
         @Query("forecast_days") days: Int=2
     ) : Response<HourlyWeatherData>
 
@@ -39,6 +39,19 @@ object WeatherAPI {
 
        val meteoInstance = Retrofit.meteoInstance.create(IWeatherApi::class.java)
        return meteoInstance.getDailyWeatherForSevenDaysByCoordinates(latitude, longitude)
+
+    }
+
+    suspend fun getHourlyWeatherForTwoDays(
+        latitude: Float,
+        longitude: Float
+    ): Response<HourlyWeatherData> {
+
+        val geoInstance = Retrofit.geoCodeInstance.create(IWeatherApi::class.java)
+
+
+        val meteoInstance = Retrofit.meteoInstance.create(IWeatherApi::class.java)
+        return meteoInstance.getHourlyWeatherByDaysAndByCoordinates(latitude, longitude)
 
     }
 
