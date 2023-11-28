@@ -6,6 +6,7 @@ import algot.emil.api.DailyWeatherDisplay
 import algot.emil.enums.WeatherState
 import algot.emil.model.WeatherModel
 import algot.emil.persistence.Weather
+import algot.emil.persistence.WeatherHourly
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -31,6 +32,8 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private val _name = MutableStateFlow("Algot")
 
     val allWeather: Flow<List<Weather>> = weatherModel.allWeather
+    val allWeatherHourly: Flow<List<WeatherHourly>> = weatherModel.allWeatherHourly
+
 
     private val _dayOfWeek = MutableStateFlow<Weather?>(null)
     val dayOfWeek: StateFlow<Weather?> = _dayOfWeek.asStateFlow()

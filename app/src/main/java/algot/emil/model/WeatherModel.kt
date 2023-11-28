@@ -8,12 +8,15 @@ import algot.emil.api.HourlyUnits
 import algot.emil.api.WeatherApi
 import algot.emil.api.WeatherConverter
 import algot.emil.persistence.Weather
+import algot.emil.persistence.WeatherHourly
 import android.util.Log
 import kotlinx.coroutines.flow.Flow
 
 class WeatherModel(persistenceContext: PersistenceContext) {
     private val weatherDao = persistenceContext.weatherDao
     val allWeather = weatherDao.getAll()
+    private val weatherHourlyDao = persistenceContext.weatherHourlyDao
+    val allWeatherHourly = weatherHourlyDao.getAll()
 
 
     var weatherDisplay: List<DailyWeatherDisplay> ?= null
@@ -60,7 +63,6 @@ class WeatherModel(persistenceContext: PersistenceContext) {
             Log.d("GetWeatherResultsHourly:", "daily units: "+ hourlyUnits.toString())
             //temperatureUnit = hourlyUnits!!.temperature_2m_max
 
-            //replaceWeatherDataInDb()
             replaceHourlyWeatherDataInDb()
             return true
         }
@@ -78,13 +80,22 @@ class WeatherModel(persistenceContext: PersistenceContext) {
     }
 
     private suspend fun replaceHourlyWeatherDataInDb() {
-        //TODO implement:
+        weatherHourlyDao.deleteAll()
 
-        //weatherDao.deleteAll()
-        //var dayNumber = 1L;
-        //for (weather in weatherDisplay!!) {
-        //    weatherDao.insert(weather = Weather(id = dayNumber++, time = weather.time, weatherState = weather.weather_State_code, temperature = weather.temperature_2m_max))
-        //}
+        var dayNumber = 1L;
+        for (weather in weatherHourlyDisplay!!) {
+            val weatherHourly = WeatherHourly(
+                id = dayNumber++,
+                time = weather.time,
+                weatherState = weather.weather_state,
+                temperature = weather.temperature_2m.toFloat(), // Assuming the WeatherHourly class takes a Float
+                relativeHumidity = weather.relative_humidity_2m,
+                precipitationProbability = weather.precipitation_probability,
+                windSpeed = weather.wind_speed_10m.toFloat(),
+                windDirection = weather.wind_direction_10m
+            )
+            weatherHourlyDao.insert(weatherHourly)
+        }
     }
 
     suspend fun insert(weather: Weather){
