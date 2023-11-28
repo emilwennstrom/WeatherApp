@@ -5,7 +5,7 @@ import algot.emil.api.DailyUnits
 import algot.emil.api.DailyWeatherDisplay
 import algot.emil.api.HourlyDataDisplay
 import algot.emil.api.HourlyUnits
-import algot.emil.api.WeatherAPI
+import algot.emil.api.WeatherApi
 import algot.emil.api.WeatherConverter
 import algot.emil.persistence.Weather
 import android.util.Log
@@ -27,7 +27,7 @@ class WeatherModel(persistenceContext: PersistenceContext) {
     suspend fun fetchWeatherNextSevenDays(): Boolean {
         val city = "Stockholm"
         Log.d("GetWeatherResults: ", "starting API call")
-        val result = WeatherAPI.getDailyWeatherForSevenDays( 52.52F, 13.41F)
+        val result = WeatherApi.getDailyWeatherForSevenDays( 52.52F, 13.41F)
         // Checking the results
         Log.d("GetWeatherResults: ", result.body().toString())
         if (result.isSuccessful && result.body() != null) {
@@ -50,7 +50,7 @@ class WeatherModel(persistenceContext: PersistenceContext) {
     suspend fun fetchWeatherNextHours(): Boolean {
         val city = "Stockholm"
         Log.d("GetWeatherResultsHourly: ", "starting API call")
-        val result = WeatherAPI.getHourlyWeatherForTwoDays( 52.52F, 13.41F)
+        val result = WeatherApi.getHourlyWeatherForTwoDays( 52.52F, 13.41F)
         Log.d("GetWeatherResultsHourly: ", result.body().toString())  // Checking the results
         if (result.isSuccessful && result.body() != null) {
             val resultBody = result.body()!!  // Extract WeatherData from the response
