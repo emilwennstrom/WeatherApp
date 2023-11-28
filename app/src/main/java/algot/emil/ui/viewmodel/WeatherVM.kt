@@ -39,9 +39,6 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         get() = _dailyWeather
 
     fun getWeatherNextSevenDays() {
-        viewModelScope.launch {
-            weatherModel.insert(weather = Weather(time = "Now", weatherState = WeatherState.ClearSky, temperature = 1.1F))
-        }
         viewModelScope.launch { // launching a new coroutine
             if(weatherModel.fetchWeatherNextSevenDays()){
                 weatherModel.weatherDisplay

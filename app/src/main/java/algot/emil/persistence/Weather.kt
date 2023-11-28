@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class Weather(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long,
     @ColumnInfo(name = "time") val time: String,
     @ColumnInfo(name = "weather_state") val weatherState: WeatherState,
     @ColumnInfo(name = "temperature_2m_max") val temperature: Float,
