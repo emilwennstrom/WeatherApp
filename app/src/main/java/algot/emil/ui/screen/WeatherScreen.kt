@@ -8,20 +8,30 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActionScope
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Card
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -31,7 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -45,7 +55,6 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    //Greeting(name = weatherVM.name.collectAsState().value);
 
     Scaffold {
         if (isLandscape) {
@@ -62,9 +71,13 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
-    val isLoading = vm.isLoading.collectAsState()
-    val searchQuery = vm.searchQuery.collectAsState()
-    val searchResults = listOf("Result 1", "Result 2", "Result 3") // Your dynamic data
+    val isLoading by vm.isLoading.collectAsState()
+    val searchQuery by vm.searchQuery.collectAsState()
+    val places by vm.places.collectAsState()
+    val isSearching by vm.isSearching.collectAsState()
+
+
+
 
     LaunchedEffect(Unit) {
         vm.getWeatherNextSevenDays()
@@ -73,59 +86,104 @@ private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
 
     Column(
         modifier = Modifier
-            .background(color = Color.Transparent)
+            .background(color = MaterialTheme.colorScheme.background)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
     ) {
-        Text(text = "Weather Forecast")
 
-        if (!isLoading.value) {
-            Row(modifier = modifier.weight(0.4f).fillMaxSize()) {
-                ListHourly(vm=vm)
-            }
-            Row(modifier = modifier.weight(0.3f).fillMaxSize()) {
-                ListSevenDays(vm = vm)
-            }
+        Row {
+            CenterAlignedTopAppBar(
+                modifier = modifier.fillMaxWidth(),
+                title = { SearchBar(onSearch = vm::onSearchTextChanged, searchText = searchQuery)},
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors (
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    titleContentColor =  MaterialTheme.colorScheme.onPrimaryContainer,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                navigationIcon = { Icon(painter = painterResource(id = R.drawable.sunny), contentDescription = null)},
+                actions = {
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(painter = painterResource(id = R.drawable.settings), contentDescription = null)
+                        
+                    }
+                }
+            )
         }
-        if (searchResults.isEmpty()) {
-            Row (modifier.weight(0.2f)){
-                ModalDrawerSheet {
-                    LazyColumn {
-                        items(searchResults) { value ->
-                            Text(text = value)
+
+        if (searchQuery.isNotEmpty()) {
+            Row(modifier.weight(1.2f)) {
+                ModalDrawerSheet(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        contentPadding = PaddingValues(10.dp),
+                        modifier = modifier.fillMaxHeight()
+
+                    ) {
+                        items(places) { value ->
+                            Card(
+                                modifier = modifier
+                                    .fillMaxSize()
+                                    .padding(2.dp)
+                                    .height(50.dp)
+                            ) {
+                                Row(
+                                    modifier = modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(text = value.display_name , style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-        Row(modifier = modifier.padding(10.dp)) {
-            SearchBar(onSearch = { query ->
-                vm.searchPlaces(query)
-            })
+
+        Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
+        if (!isLoading) {
+
+            Row(modifier = Modifier
+                .weight(0.5f)
+                .fillMaxSize()) {
+                ListHourly(vm=vm)
+            }
+            Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
+            Row(modifier = Modifier
+                .weight(0.5f)
+                .fillMaxSize()) {
+                ListSevenDays(vm = vm)
+            }
         }
-
-
+        Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
     }
 }
 
 @ExperimentalMaterial3Api
 @Composable
 fun SearchBar(
-    modifier: Modifier = Modifier, onSearch: (String) -> Unit
+    modifier: Modifier = Modifier,
+    onSearch: (String) -> Unit,
+    searchText: String
 ) {
-    var textState by remember { mutableStateOf(TextFieldValue("")) }
-
-    OutlinedTextField(
-        value = textState,
-        onValueChange = { value ->
-            textState = value
-            onSearch(value.text)
-        },
+    TextField(
+        value = searchText,
+        onValueChange = onSearch, //onValueChange = onSearch,
+        keyboardActions = KeyboardActions(
+            onDone = {onSearch(searchText)}
+        ),
         singleLine = true,
         placeholder = { Text("Enter place") },
         label = { Text("Search") },
         modifier = Modifier.fillMaxWidth(),
+        colors = TextFieldDefaults.textFieldColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            textColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ),
+        shape = RectangleShape
     )
 }
 
@@ -145,11 +203,11 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(2.dp),
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(12.dp)
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -184,11 +242,11 @@ private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(2.dp),
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(12.dp)
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -196,9 +254,7 @@ private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
                     Text(
                         text = weather.time + " ", style = MaterialTheme.typography.bodyMedium
                     )
-                    //Spacer(modifier = Modifier.width(8.dp))
                     weatherImage(vm = vm, weatherState = weather.weatherState.toString())
-                    //Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "${weather.temperature}$temperatureUnit",
                         style = MaterialTheme.typography.bodyMedium

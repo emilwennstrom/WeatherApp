@@ -5,12 +5,14 @@ import algot.emil.api.DailyUnits
 import algot.emil.api.DailyWeatherDisplay
 import algot.emil.api.HourlyDataDisplay
 import algot.emil.api.HourlyUnits
+import algot.emil.api.PlaceData
 import algot.emil.api.WeatherApi
 import algot.emil.api.WeatherConverter
 import algot.emil.persistence.Weather
 import algot.emil.persistence.WeatherHourly
 import android.util.Log
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 class WeatherModel(persistenceContext: PersistenceContext) {
     private val weatherDao = persistenceContext.weatherDao
@@ -104,6 +106,17 @@ class WeatherModel(persistenceContext: PersistenceContext) {
     }
 
     fun getWeather(id: Long): Flow<Weather> = weatherDao.get(id)
+    suspend fun searchPlaces(query: String): Flow<List<PlaceData>> = flow {
+        val result = mutableListOf<PlaceData>()
+        val response = WeatherApi.searchPlaces(query) // fetches data from API
+        if (response.isSuccessful) {
+            response.body()?.let { places ->
+                result.addAll(places)
+            }
+        }
+        emit(result) // Emit the result as a Flow
+    }
+
 
 
 }

@@ -1,23 +1,24 @@
 package algot.emil.ui.viewmodel
 
 import algot.emil.PersistenceContext
-import algot.emil.api.DailyUnits
 import algot.emil.api.DailyWeatherDisplay
+import algot.emil.api.PlaceData
 import algot.emil.enums.WeatherState
 import algot.emil.model.WeatherModel
 import algot.emil.persistence.Weather
 import algot.emil.persistence.WeatherHourly
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
-import retrofit2.http.Query
 
 
 interface WeatherViewModel
@@ -42,6 +43,23 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
 
+
+    private val _isSearching = MutableStateFlow(false)
+    val isSearching = _isSearching.asStateFlow()
+
+    private val somePlaceData = listOf(
+        PlaceData(
+            display_name = "Stockholm",
+            lat = "59",
+            lon = "18"
+        )
+
+    )
+
+    private val _places = MutableStateFlow(somePlaceData)
+    val places = _places.asStateFlow()
+
+
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -61,41 +79,50 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     val dailyWeather: StateFlow<List<DailyWeatherDisplay>> //what weather-information to display from today to 7 days forward with daily updates
         get() = _dailyWeather
 
-    private val _temperatureUnit = MutableStateFlow<String>("C?") //for example, C (celsius) or F (fahrenheit)
+    private val _temperatureUnit =
+        MutableStateFlow<String>("C?") //for example, C (celsius) or F (fahrenheit)
     val temperatureUnit: StateFlow<String>
         get() = _temperatureUnit
 
     fun getWeatherNextSevenDays() {
         viewModelScope.launch { // launching a new coroutine
-            if(weatherModel.fetchWeatherNextSevenDays()){
-                if(weatherModel.weatherDisplay!=null){
-                    _dailyWeather.value= weatherModel.weatherDisplay!!
+            if (weatherModel.fetchWeatherNextSevenDays()) {
+                if (weatherModel.weatherDisplay != null) {
+                    _dailyWeather.value = weatherModel.weatherDisplay!!
                 }
-                if(weatherModel.temperatureUnit!=null){
-                    _temperatureUnit.value= weatherModel.temperatureUnit!!
+                if (weatherModel.temperatureUnit != null) {
+                    _temperatureUnit.value = weatherModel.temperatureUnit!!
                 }
-                _isLoading.value=false
+                _isLoading.value = false
             }
         }
     }
 
     fun getWeatherHourly() {
         viewModelScope.launch { // launching a new coroutine
-            if(weatherModel.fetchWeatherNextHours()){
+            if (weatherModel.fetchWeatherNextHours()) {
                 //TODO: implement
             }
         }
     }
 
-    fun searchPlaces(query: String){
-        Log.d("TAG", query)
+    fun onSearchTextChanged(query: String) {
         _searchQuery.value = query
+        viewModelScope.launch {
+            if (query.isNotEmpty()) {
+                weatherModel.searchPlaces(query).collect { placeList ->
+                    _places.value = placeList
+                }
+                delay(1000)
+            }
+
+        }
     }
 
     fun loadDayOfWeek(dayOfWeek: Int) {
         viewModelScope.launch {
-            weatherModel.getWeather(dayOfWeek.toLong()).collect {
-                weather -> _dayOfWeek.value = weather
+            weatherModel.getWeather(dayOfWeek.toLong()).collect { weather ->
+                _dayOfWeek.value = weather
             }
         }
 
