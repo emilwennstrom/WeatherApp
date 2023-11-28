@@ -5,5 +5,5 @@ import retrofit2.http.GET
 
 interface WeatherApi {
     @GET("v1/forecast?latitude=52.52&longitude=13.41&daily=weather_code,temperature_2m_max")
-    suspend fun getQuotes() : Response<WeatherData>
+    suspend fun getDailyWeatherForSevenDays() : Response<WeatherData>
 }

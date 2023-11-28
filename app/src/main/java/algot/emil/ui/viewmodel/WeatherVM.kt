@@ -1,5 +1,6 @@
 package algot.emil.ui.viewmodel
 
+import algot.emil.api.DailyWeatherDisplay
 import algot.emil.api.RetrofitHelper
 import algot.emil.api.WeatherConverter
 import algot.emil.api.WeatherApi
@@ -29,20 +30,24 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     val name: StateFlow<String>
         get() = _name
 
+  //  private val _dailyWeather = MutableStateFlow<DailyWeatherDisplay>()
+
     fun getWeatherNextSevenDays() {
         Log.d("GetWeatherResults: ", "inside getWeatherNextSevenDays")
         val weatherApi = RetrofitHelper.getInstance().create(WeatherApi::class.java)
         // launching a new coroutine
         viewModelScope.launch {
             Log.d("GetWeatherResults: ", "starting API call")
-            val result = weatherApi.getQuotes()
+            val result = weatherApi.getDailyWeatherForSevenDays()
             if (result != null){
                 // Checking the results
                 Log.d("GetWeatherResults: ", result.body().toString())
                 if (result.isSuccessful && result.body() != null) {
-                    val weatherData = result.body()!!  // Extract WeatherData from the response
-                    val result2 = WeatherConverter().ConvertWeatherDataToVM(weatherData)
-                    Log.d("GetWeatherResults:", "list of result converted: "+ result2.toString())
+                    val resultBody = result.body()!!  // Extract WeatherData from the response
+                    val weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
+                    Log.d("GetWeatherResults:", "list of result converted: "+ weatherDisplay.toString())
+                    val displayUnit = WeatherConverter().getDailyUnits(resultBody)
+                    Log.d("GetWeatherResults:", "daily units: "+ displayUnit.toString())
                 } else {
                     // Handle unsuccessful response or null body
                 }
@@ -53,9 +58,4 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
             Log.d("GetWeatherResults: ", result.body().toString())
         }
     }
-
-
-
-
-
 }

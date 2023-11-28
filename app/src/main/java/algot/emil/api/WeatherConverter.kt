@@ -40,7 +40,7 @@ class WeatherConverter {
     /**
      * converts WeatherData-object parsed from API to a display-friendly version of weatherdata: "DailyWeatherDisplay"
      */
-    fun ConvertWeatherDataToVM(weatherData: WeatherData): List<DailyWeatherDisplay>{
+    fun getDailyWeatherDisplay(weatherData: WeatherData): List<DailyWeatherDisplay>{
         val displayList = mutableListOf<DailyWeatherDisplay>()
         for (index in weatherData.daily.time.indices) {
             val weatherCode = weatherData.daily.weather_code[index] // Access the corresponding weather code
@@ -56,5 +56,13 @@ class WeatherConverter {
             displayList.add(display)
         }
         return displayList;
+    }
+
+    fun getDailyUnits(weatherData: WeatherData): DailyUnits{
+        val time: String = weatherData.daily_units.time
+        val weather_code: String = weatherData.daily_units.weather_code
+        val temperature_2m_max: String = weatherData.daily_units.temperature_2m_max
+        val dailyUnits = DailyUnits(time, weather_code,temperature_2m_max)
+        return dailyUnits;
     }
 }

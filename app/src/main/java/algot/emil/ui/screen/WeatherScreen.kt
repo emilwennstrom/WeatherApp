@@ -32,6 +32,10 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()){
 
 @Composable
 private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
+
+    Column {
+
+    }
     Column{
         Button(
             modifier = Modifier
