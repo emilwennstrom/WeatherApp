@@ -36,7 +36,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
             DailyWeatherDisplay(
                 time = "2023-11-28",
                 weather_State_code = WeatherState.ClearSky,
-                temperature_2m_max = 0.0 // Default temperature
+                temperature_2m_max = 0.0F // Default temperature
             )
             // Add more DailyWeatherDisplay objects as needed
         )
