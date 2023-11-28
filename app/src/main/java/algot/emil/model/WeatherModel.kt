@@ -17,6 +17,8 @@ class WeatherModel(persistenceContext: PersistenceContext) {
     var displayUnit: DailyUnits ?= null
         get() = field
 
+    var temperatureUnit: String?="C"
+
     suspend fun insert(weather: Weather){
         Log.d("TAG", weather.time)
         weatherDao.insert(weather)
@@ -35,6 +37,7 @@ class WeatherModel(persistenceContext: PersistenceContext) {
                 Log.d("GetWeatherResults:", "list of result converted: "+ weatherDisplay.toString())
                 displayUnit = WeatherConverter().getDailyUnits(resultBody)
                 Log.d("GetWeatherResults:", "daily units: "+ displayUnit.toString())
+                temperatureUnit= displayUnit!!.temperature_2m_max
                 return true
             } else {
                 // Handle unsuccessful response or null body

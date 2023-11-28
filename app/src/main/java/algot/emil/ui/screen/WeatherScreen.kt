@@ -44,6 +44,7 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()){
 private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
 
 
+
     Column{
         Column (modifier = Modifier
             .padding(42.dp)
@@ -64,6 +65,13 @@ private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
                     painter = painterResource(R.drawable.sunny_24px),
                     contentDescription = "Sunny Weather"
                 )
+            }
+            Box(
+                modifier = Modifier
+                    .height(48.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "test")
             }
         }
         Column (modifier = Modifier
