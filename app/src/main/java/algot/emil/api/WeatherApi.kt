@@ -73,6 +73,4 @@ object WeatherApi {
 
     }
 
-
-
 }

@@ -7,6 +7,7 @@ import algot.emil.enums.WeatherState
 import algot.emil.model.WeatherModel
 import algot.emil.persistence.Weather
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import retrofit2.http.Query
 
 
 interface WeatherViewModel
@@ -32,6 +34,9 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
 
     private val _dayOfWeek = MutableStateFlow<Weather?>(null)
     val dayOfWeek: StateFlow<Weather?> = _dayOfWeek.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
 
     private val _isLoading = MutableStateFlow(true)
@@ -77,6 +82,11 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                 //TODO: implement
             }
         }
+    }
+
+    fun searchPlaces(query: String){
+        Log.d("TAG", query)
+        _searchQuery.value = query
     }
 
     fun loadDayOfWeek(dayOfWeek: Int) {
