@@ -21,7 +21,7 @@ import algot.emil.enums.WeatherState
     */
 class WeatherConverter {
 
-    fun convertIntToWeatherCode(weatherCode: Int): WeatherState {
+    private fun convertIntToWeatherCode(weatherCode: Int): WeatherState {
         return when (weatherCode) {
             0 -> WeatherState.ClearSky
             1 -> WeatherState.MainlyClear
