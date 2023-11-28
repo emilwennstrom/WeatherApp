@@ -68,6 +68,7 @@ private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
 
     LaunchedEffect(Unit) {
         vm.getWeatherNextSevenDays()
+        vm.getWeatherHourly()
     }
 
     Column(
@@ -80,7 +81,10 @@ private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
         Text(text = "Weather Forecast")
 
         if (!isLoading.value) {
-            Row(modifier = modifier.weight(0.7f).fillMaxSize()) {
+            Row(modifier = modifier.weight(0.4f).fillMaxSize()) {
+                ListHourly(vm=vm)
+            }
+            Row(modifier = modifier.weight(0.3f).fillMaxSize()) {
                 ListSevenDays(vm = vm)
             }
         }
@@ -129,6 +133,45 @@ fun SearchBar(
 @Composable
 private fun LandscapeScreen(vm: WeatherVM, padding: Modifier) {
     //Greeting(name = "horisonetelll ")
+}
+
+@Composable
+private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
+    val allWeather by vm.allWeatherHourly.collectAsState(initial = listOf())
+    val temperatureUnit by vm.temperatureUnit.collectAsState()
+
+    LazyColumn {
+        items(allWeather) { weather ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = weather.time + " ", style = MaterialTheme.typography.bodyMedium
+                    )
+                    //Spacer(modifier = Modifier.width(8.dp))
+                    weatherImage(vm = vm, weatherState = weather.weatherState.toString())
+                    //Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "${weather.temperature}$temperatureUnit",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "humidity: ${weather.relativeHumidity}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
