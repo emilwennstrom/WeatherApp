@@ -1,6 +1,6 @@
 package algot.emil.api
 
-import algot.emil.enums.Weather
+import algot.emil.enums.WeatherState
 
 
 data class WeatherData(
@@ -32,6 +32,6 @@ data class DailyWeather(
  */
 data class DailyWeatherDisplay(
     val time: String,
-    val weather_code: Weather,
+    val weather_State_code: WeatherState,
     val temperature_2m_max: Double
 )

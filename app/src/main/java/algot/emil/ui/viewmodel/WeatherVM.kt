@@ -1,8 +1,11 @@
 package algot.emil.ui.viewmodel
 
 import algot.emil.PersistenceContext
+import algot.emil.api.DailyWeatherDisplay
 import algot.emil.api.RetrofitHelper
+import algot.emil.api.WeatherConverter
 import algot.emil.api.WeatherApi
+import algot.emil.enums.WeatherState
 import algot.emil.model.WeatherModel
 import algot.emil.persistence.Weather
 import android.app.Application
@@ -12,7 +15,6 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
@@ -32,6 +34,14 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     val name: StateFlow<String>
         get() = _name
 
+    private val _dailyWeather = MutableStateFlow(DailyWeatherDisplay(
+        time = "2023-11-28",
+        weather_State_code = WeatherState.ClearSky,
+        temperature_2m_max = 0.0 // Default temperature
+    ))
+    val dailyWeather: StateFlow<DailyWeatherDisplay>
+        get() = _dailyWeather
+
     fun getWeatherNextSevenDays() {
         viewModelScope.launch {
             weatherModel.insert(weather = Weather(1, "a", 1F, 2F, 3F, 4F,))
@@ -41,14 +51,25 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         // launching a new coroutine
         viewModelScope.launch {
             Log.d("GetWeatherResults: ", "starting API call")
-            val result = weatherApi.getQuotes()
+            val result = weatherApi.getDailyWeatherForSevenDays()
+            if (result != null){
+                // Checking the results
+                Log.d("GetWeatherResults: ", result.body().toString())
+                if (result.isSuccessful && result.body() != null) {
+                    val resultBody = result.body()!!  // Extract WeatherData from the response
+                    val weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
+                    Log.d("GetWeatherResults:", "list of result converted: "+ weatherDisplay.toString())
+                    val displayUnit = WeatherConverter().getDailyUnits(resultBody)
+                    Log.d("GetWeatherResults:", "daily units: "+ displayUnit.toString())
+                } else {
+                    // Handle unsuccessful response or null body
+                }
+            }
+            else{
+                Log.d("GetWeatherResults:", result)
+            }
             Log.d("GetWeatherResults: ", result.body().toString())
         }
 
     }
-
-
-
-
-
 }

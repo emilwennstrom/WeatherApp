@@ -18,7 +18,7 @@ package algot.emil.enums
    96, 99 *	Thunderstorm with slight and heavy hail
     */
 
-enum class Weather {
+enum class WeatherState {
     ClearSky, MainlyClear, PartlyCloudy, Overcast, RainSlight, RainModerate, RainHeavy,
    Snow, Thunderstorm, Fog, Other
 }
