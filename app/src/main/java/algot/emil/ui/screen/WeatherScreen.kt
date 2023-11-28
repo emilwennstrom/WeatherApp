@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,6 +47,10 @@ private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
             )
 
         }
+        val allWeather by vm.allWeather.collectAsState(initial = listOf())
+        Text(text = allWeather.toString())
+
+
     }
 
 

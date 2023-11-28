@@ -1,26 +1,19 @@
 package algot.emil.model
 
-import algot.emil.persistence.AppDatabase
+import algot.emil.PersistenceContext
 import algot.emil.persistence.Weather
-import algot.emil.persistence.WeatherRepository
-import android.content.Context
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
+import android.util.Log
 
-class WeatherModel(context: Context) {
-    //private val database by lazy { AppDatabase.getDatabase(context) }
-    //private val weatherRepository by lazy { WeatherRepository(database.weatherDao()) }
+class WeatherModel(persistenceContext: PersistenceContext) {
+    private val weatherDao = persistenceContext.weatherDao
 
-    //val allWeather: Flow<List<Weather>> = weatherRepository.allWeather
+    val allWeather = weatherDao.getAll()
 
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun insert(weather: Weather) = GlobalScope.launch {
-        //weatherRepository.insert(weather)
+    suspend fun insert(weather: Weather){
+        Log.d("TAG", weather.time)
+        weatherDao.insert(weather)
     }
-
 
 
 }

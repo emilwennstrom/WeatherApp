@@ -1,7 +1,5 @@
 package algot.emil
 
-import algot.emil.persistence.AppDatabase
-import algot.emil.persistence.WeatherRepository
 import algot.emil.ui.screen.WeatherScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity

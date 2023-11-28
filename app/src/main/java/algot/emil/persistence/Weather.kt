@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 
 
 @Entity
-class Weather(
+data class Weather(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     @ColumnInfo(name = "time") val time: String,
     @ColumnInfo(name = "temperature_2m_max") val temperature: Float,
