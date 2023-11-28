@@ -92,6 +92,7 @@ private fun LandscapeScreen(vm: WeatherVM){
 private fun weatherForSevenDays(vm:WeatherVM, index:Int){
     val allWeather by vm.allWeather.collectAsState(initial = listOf())
     val temperatureUnit by vm.temperatureUnit.collectAsState()
+    val test by vm.dailyWeather.collectAsState()
 
     Box(
         modifier = Modifier
@@ -114,7 +115,7 @@ private fun weatherForSevenDays(vm:WeatherVM, index:Int){
             .height(48.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = " $temperatureUnit")
+        Text(text = "${test.get(0).temperature_2m_max} $temperatureUnit")
         //${allWeather.get(3).temperature} +
     }
 
