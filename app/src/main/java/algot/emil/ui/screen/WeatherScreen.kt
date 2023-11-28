@@ -8,12 +8,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,37 +43,23 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()){
 
 
 @Composable
-private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
+private fun PortraitScreen(vm: WeatherVM){
+    Greeting(name = "tja");
+    val isLoading = vm.isLoading.collectAsState()
 
-    val temperatureUnit by vm.temperatureUnit.collectAsState()
+    LaunchedEffect(Unit) {
+        vm.getWeatherNextSevenDays()
+    }
 
     Column{
         Column (modifier = Modifier
             .padding(42.dp)
             .weight(0.8f)
         ){
-            Box(
-                modifier = Modifier
-                    .height(48.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                // Background image
-                Image(
-                    painter = painterResource(R.drawable.ic_launcher_background),
-                    contentDescription = "Background"
-                )
-                // Foreground image
-                Image(
-                    painter = painterResource(R.drawable.sunny_24px),
-                    contentDescription = "Sunny Weather"
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .height(48.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "$temperatureUnit")
+            if(!isLoading.value){
+                Row{
+                    weatherForSevenDays(vm = vm, 1)
+                }
             }
         }
         Column (modifier = Modifier
@@ -89,18 +77,48 @@ private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
         }
         val allWeather by vm.allWeather.collectAsState(initial = listOf())
         Text(text = allWeather.toString())
-
-
     }
-
-
 }
+
+
 
 @Composable
 private fun LandscapeScreen(vm: WeatherVM){
     Greeting(name = "horisonetelll ");
 }
 
+
+@Composable
+private fun weatherForSevenDays(vm:WeatherVM, index:Int){
+    val allWeather by vm.allWeather.collectAsState(initial = listOf())
+    val temperatureUnit by vm.temperatureUnit.collectAsState()
+
+    Box(
+        modifier = Modifier
+            .height(48.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Background image
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_background),
+            contentDescription = "Background"
+        )
+        // Foreground image
+        Image(
+            painter = painterResource(R.drawable.sunny_24px),
+            contentDescription = "Sunny Weather"
+        )
+    }
+    Box(
+        modifier = Modifier
+            .height(48.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = " $temperatureUnit")
+        //${allWeather.get(3).temperature} +
+    }
+
+}
 
 @Composable
 private fun Greeting(name: String, modifier: Modifier = Modifier) {

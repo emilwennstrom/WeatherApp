@@ -27,6 +27,8 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private val _name = MutableStateFlow("Algot")
 
     val allWeather: Flow<List<Weather>> = weatherModel.allWeather
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     val name: StateFlow<String>
         get() = _name
@@ -57,6 +59,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                 if(weatherModel.temperatureUnit!=null){
                     _temperatureUnit.value= weatherModel.temperatureUnit!!
                 }
+                _isLoading.value=false
             }
         }
     }
