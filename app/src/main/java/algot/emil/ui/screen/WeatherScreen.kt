@@ -1,103 +1,138 @@
 package algot.emil.ui.screen
 
 import algot.emil.R
-import algot.emil.ui.theme.WeatherAppTheme
 import algot.emil.ui.viewmodel.WeatherVM
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     //Greeting(name = weatherVM.name.collectAsState().value);
-    if (isLandscape) {
-        LandscapeScreen(vm = weatherVM)
-    } else {
-        PortraitScreen(vm = weatherVM)
+
+    Scaffold {
+        if (isLandscape) {
+            LandscapeScreen(vm = weatherVM, Modifier.padding(it))
+        } else {
+            PortraitScreen(vm = weatherVM, Modifier.padding(it))
+        }
+
     }
 
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PortraitScreen(vm: WeatherVM) {
+private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
     val isLoading = vm.isLoading.collectAsState()
+    val searchQuery = vm.searchQuery.collectAsState()
+    val searchResults = listOf("Result 1", "Result 2", "Result 3") // Your dynamic data
 
     LaunchedEffect(Unit) {
         vm.getWeatherNextSevenDays()
     }
 
-    Column {
-        Text(
-            text = "Weather Forecast"
-        )
-        Column(
-            modifier = Modifier
-                .padding(42.dp)
-                .weight(0.8f)
-        ) {
-            if (!isLoading.value) {
-               ListSevenDays(vm = vm)
-            }
-        }
-        Column(
-            modifier = Modifier
-                .padding(42.dp)
-                .weight(0.2f),
-        ) {
-            Button(onClick = {
-                vm.getWeatherNextSevenDays()
-                vm.getWeatherHourly()
-            }) {
-                Text(
-                    text = "Get Weather"
-                )
+    Column(
+        modifier = Modifier
+            .background(color = Color.Transparent)
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Bottom
+    ) {
+        Text(text = "Weather Forecast")
 
+        if (!isLoading.value) {
+            Row(modifier = modifier.weight(0.7f).fillMaxSize()) {
+                ListSevenDays(vm = vm)
             }
         }
-        //val allWeather by vm.allWeather.collectAsState(initial = listOf())
-        //Text(text = allWeather.toString())
+        if (searchResults.isEmpty()) {
+            Row (modifier.weight(0.2f)){
+                ModalDrawerSheet {
+                    LazyColumn {
+                        items(searchResults) { value ->
+                            Text(text = value)
+                        }
+                    }
+                }
+            }
+        }
+        Row(modifier = modifier.padding(10.dp)) {
+            SearchBar(onSearch = { query ->
+                vm.searchPlaces(query)
+            })
+        }
+
 
     }
 }
 
+@ExperimentalMaterial3Api
+@Composable
+fun SearchBar(
+    modifier: Modifier = Modifier, onSearch: (String) -> Unit
+) {
+    var textState by remember { mutableStateOf(TextFieldValue("")) }
+
+    OutlinedTextField(
+        value = textState,
+        onValueChange = { value ->
+            textState = value
+            onSearch(value.text)
+        },
+        singleLine = true,
+        placeholder = { Text("Enter place") },
+        label = { Text("Search") },
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
 
 
 @Composable
-private fun LandscapeScreen(vm: WeatherVM) {
-    Greeting(name = "horisonetelll ")
+private fun LandscapeScreen(vm: WeatherVM, padding: Modifier) {
+    //Greeting(name = "horisonetelll ")
 }
 
 @Composable
-private fun ListSevenDays(vm: WeatherVM) {
+private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
     val allWeather by vm.allWeather.collectAsState(initial = listOf())
     val temperatureUnit by vm.temperatureUnit.collectAsState()
 
@@ -106,21 +141,21 @@ private fun ListSevenDays(vm: WeatherVM) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    .padding(8.dp),
             ) {
                 Row(
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = weather.time + " ",
-                        style = MaterialTheme.typography.bodyMedium
+                        text = weather.time + " ", style = MaterialTheme.typography.bodyMedium
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    //Spacer(modifier = Modifier.width(8.dp))
                     weatherImage(vm = vm, weatherState = weather.weatherState.toString())
-                    Spacer(modifier = Modifier.width(8.dp))
+                    //Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "${weather.temperature}$temperatureUnit",
                         style = MaterialTheme.typography.bodyMedium
@@ -132,7 +167,7 @@ private fun ListSevenDays(vm: WeatherVM) {
 }
 
 @Composable
-private fun weatherImage(vm: WeatherVM, weatherState: String){
+private fun weatherImage(vm: WeatherVM, weatherState: String) {
     Box(
         modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
     ) {
@@ -150,7 +185,6 @@ private fun weatherImage(vm: WeatherVM, weatherState: String){
 }
 
 
-
 @Composable
 private fun WeatherForSevenDays(vm: WeatherVM, index: Int) {
     val allWeather by vm.allWeather.collectAsState(initial = listOf())
@@ -159,65 +193,46 @@ private fun WeatherForSevenDays(vm: WeatherVM, index: Int) {
     val currentDay by vm.dayOfWeek.collectAsState()
     val test by vm.dailyWeather.collectAsState()
 
-    Row{
-    Box(
-        modifier = Modifier
-            .height(48.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        // Background image
-        Image(
-            painter = painterResource(R.drawable.ic_launcher_background),
-            contentDescription = "Background"
-        )
-        // Foreground image
-        Image(
-            painter = painterResource(R.drawable.sunny),
-            contentDescription = "Sunny Weather"
-        )
-    }
-    Box(
-        modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
-    ) {
-        Text(text = "${test.get(index).temperature_2m_max}  $temperatureUnit\n")
-        Text(text = "${test.get(index).time}")
-    }
+    Row {
+        Box(
+            modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
+        ) {
+            // Background image
+            Image(
+                painter = painterResource(R.drawable.ic_launcher_background),
+                contentDescription = "Background"
+            )
+            // Foreground image
+            Image(
+                painter = painterResource(R.drawable.sunny), contentDescription = "Sunny Weather"
+            )
+        }
+        Box(
+            modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
+        ) {
+            Text(text = "${test[index].temperature_2m_max}  $temperatureUnit\n")
+            Text(text = test[index].time)
+        }
 
-    //Text(text = " $currentDay}")
+        //Text(text = " $currentDay}")
     }
 }
 
-@Composable
-private fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "$name",
-        modifier = modifier
-    )
-}
-
-
-@Preview(showBackground = true)
-@Composable
-private fun GreetingPreview() {
-    WeatherAppTheme {
-        WeatherScreen()
-    }
-}
 
 /*
 ClearSky, MainlyClear, PartlyCloudy, Overcast, RainSlight, RainModerate, RainHeavy,
    Snow, Thunderstorm, Fog, Other
  */
-private fun getPictureName(weatherState: String):Int{
-    return when (weatherState){
+private fun getPictureName(weatherState: String): Int {
+    return when (weatherState) {
         "ClearSky" -> R.drawable.sunny
         "MainlyClear" -> R.drawable.sunny
         "PartlyCloudy" -> R.drawable.partly_cloudy_day
         "Overcast" -> R.drawable.cloud
-        "RainSlight" ->R.drawable.rainy_light
+        "RainSlight" -> R.drawable.rainy_light
         "RainModerate" -> R.drawable.rainy_heavy
         "RainHeavy" -> R.drawable.rainy_heavy
-        "Snow" ->R.drawable.snowing_heavy
+        "Snow" -> R.drawable.snowing_heavy
         "Thunderstorm" -> R.drawable.thunderstorm
         "Fog" -> R.drawable.sunny //TODO: lägg till fog
         "Other" -> R.drawable.sunny //TODO: ???
