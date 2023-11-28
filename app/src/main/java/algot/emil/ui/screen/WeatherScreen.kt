@@ -73,10 +73,9 @@ private fun PortraitScreen(vm: WeatherVM) {
                 .padding(42.dp)
                 .weight(0.2f),
         ) {
-            Button(
-                onClick = {
-                    vm.getWeatherNextSevenDays()
-                }) {
+            Button(onClick = {
+                vm.getWeatherNextSevenDays()
+            }) {
                 Text(
                     text = "Get Weather"
                 )
@@ -134,9 +133,7 @@ private fun ListSevenDays(vm: WeatherVM) {
 @Composable
 private fun weatherImage(vm: WeatherVM, weatherState: String){
     Box(
-        modifier = Modifier
-            .height(48.dp),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
     ) {
         // Background image
         Image(
@@ -179,9 +176,7 @@ private fun WeatherForSevenDays(vm: WeatherVM, index: Int) {
         )
     }
     Box(
-        modifier = Modifier
-            .height(48.dp),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
     ) {
         Text(text = "${test.get(index).temperature_2m_max}  $temperatureUnit\n")
         Text(text = "${test.get(index).time}")

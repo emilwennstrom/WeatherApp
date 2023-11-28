@@ -3,8 +3,7 @@ package algot.emil.model
 import algot.emil.PersistenceContext
 import algot.emil.api.DailyUnits
 import algot.emil.api.DailyWeatherDisplay
-import algot.emil.api.RetrofitHelper
-import algot.emil.api.WeatherApi
+import algot.emil.api.WeatherAPI
 import algot.emil.api.WeatherConverter
 import algot.emil.persistence.Weather
 import android.util.Log
@@ -23,9 +22,9 @@ class WeatherModel(persistenceContext: PersistenceContext) {
 
 
     suspend fun fetchWeatherNextSevenDays(): Boolean {
-        val weatherApi = RetrofitHelper.getInstance().create(WeatherApi::class.java)
+        val city = "Stockholm"
         Log.d("GetWeatherResults: ", "starting API call")
-        val result = weatherApi.getDailyWeatherForSevenDays( 52.52F, 13.41F)
+        val result = WeatherAPI.getDailyWeatherForSevenDays( 52.52F, 13.41F)
         // Checking the results
         Log.d("GetWeatherResults: ", result.body().toString())
         if (result.isSuccessful && result.body() != null) {
