@@ -1,6 +1,7 @@
 package algot.emil.ui.viewmodel
 
 import algot.emil.PersistenceContext
+import algot.emil.api.DailyUnits
 import algot.emil.api.DailyWeatherDisplay
 import algot.emil.enums.WeatherState
 import algot.emil.model.WeatherModel
@@ -30,19 +31,32 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     val name: StateFlow<String>
         get() = _name
 
-    private val _dailyWeather = MutableStateFlow(DailyWeatherDisplay(
-        time = "2023-11-28",
-        weather_State_code = WeatherState.ClearSky,
-        temperature_2m_max = 0.0F // Default temperature
-    ))
-    val dailyWeather: StateFlow<DailyWeatherDisplay>
+    private val _dailyWeather = MutableStateFlow<List<DailyWeatherDisplay>>(
+        listOf(
+            DailyWeatherDisplay(
+                time = "2023-11-28",
+                weather_State_code = WeatherState.ClearSky,
+                temperature_2m_max = 0.0 // Default temperature
+            )
+            // Add more DailyWeatherDisplay objects as needed
+        )
+    )
+    val dailyWeather: StateFlow<List<DailyWeatherDisplay>> //what weather-information to display from today to 7 days forward with daily updates
         get() = _dailyWeather
+
+    private val _temperatureUnit = MutableStateFlow<String>("C?") //for example, C (celsius) or F (fahrenheit)
+    val temperatureUnit: StateFlow<String>
+        get() = _temperatureUnit
 
     fun getWeatherNextSevenDays() {
         viewModelScope.launch { // launching a new coroutine
             if(weatherModel.fetchWeatherNextSevenDays()){
-                weatherModel.weatherDisplay
-                weatherModel.displayUnit
+                if(weatherModel.weatherDisplay!=null){
+                    _dailyWeather.value= weatherModel.weatherDisplay!!
+                }
+                if(weatherModel.temperatureUnit!=null){
+                    _temperatureUnit.value= weatherModel.temperatureUnit!!
+                }
             }
         }
     }

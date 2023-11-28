@@ -15,6 +15,8 @@ class WeatherModel(persistenceContext: PersistenceContext) {
     var weatherDisplay: List<DailyWeatherDisplay> ?= null
     var displayUnit: DailyUnits?= null
 
+    var temperatureUnit: String?="C"
+
     suspend fun insert(weather: Weather){
         Log.d("TAG", weather.time)
         weatherDao.insert(weather)
@@ -24,19 +26,25 @@ class WeatherModel(persistenceContext: PersistenceContext) {
         val weatherApi = RetrofitHelper.getInstance().create(WeatherApi::class.java)
         Log.d("GetWeatherResults: ", "starting API call")
         val result = weatherApi.getDailyWeatherForSevenDays()
-        // Checking the results
-        Log.d("GetWeatherResults: ", result.body().toString())
-        if (result.isSuccessful && result.body() != null) {
-            val resultBody = result.body()!!  // Extract WeatherData from the response
-            weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
-            Log.d("GetWeatherResults:", "list of result converted: "+ weatherDisplay.toString())
-            displayUnit = WeatherConverter().getDailyUnits(resultBody)
-            Log.d("GetWeatherResults:", "daily units: "+ displayUnit.toString())
-
-            replaceWeatherDataInDb()
-
-
-            return true
+        if (result != null){
+            // Checking the results
+            Log.d("GetWeatherResults: ", result.body().toString())
+            if (result.isSuccessful && result.body() != null) {
+                val resultBody = result.body()!!  // Extract WeatherData from the response
+                weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
+                Log.d("GetWeatherResults:", "list of result converted: "+ weatherDisplay.toString())
+                displayUnit = WeatherConverter().getDailyUnits(resultBody)
+                Log.d("GetWeatherResults:", "daily units: "+ displayUnit.toString())
+                temperatureUnit= displayUnit!!.temperature_2m_max
+                return true
+            } else {
+                // Handle unsuccessful response or null body
+                return false
+            }
+        }
+        else{
+            Log.d("GetWeatherResults:", result)
+            return false
         }
         Log.d("GetWeatherResults: ", result.body().toString())
         return false

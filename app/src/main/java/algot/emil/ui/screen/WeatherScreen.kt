@@ -43,6 +43,7 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()){
 @Composable
 private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
 
+    val temperatureUnit by vm.temperatureUnit.collectAsState()
 
     Column{
         Column (modifier = Modifier
@@ -64,6 +65,13 @@ private fun PortraitScreen(vm: WeatherVM){Greeting(name = "tja");
                     painter = painterResource(R.drawable.sunny_24px),
                     contentDescription = "Sunny Weather"
                 )
+            }
+            Box(
+                modifier = Modifier
+                    .height(48.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "$temperatureUnit")
             }
         }
         Column (modifier = Modifier
