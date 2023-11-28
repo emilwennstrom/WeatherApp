@@ -2,14 +2,10 @@ package algot.emil.ui.viewmodel
 
 import algot.emil.PersistenceContext
 import algot.emil.api.DailyWeatherDisplay
-import algot.emil.api.RetrofitHelper
-import algot.emil.api.WeatherConverter
-import algot.emil.api.WeatherApi
 import algot.emil.enums.WeatherState
 import algot.emil.model.WeatherModel
 import algot.emil.persistence.Weather
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
@@ -46,30 +42,11 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         viewModelScope.launch {
             weatherModel.insert(weather = Weather(time = "Now", weatherState = WeatherState.ClearSky, temperature = 1.1F))
         }
-        Log.d("GetWeatherResults: ", "inside getWeatherNextSevenDays")
-        val weatherApi = RetrofitHelper.getInstance().create(WeatherApi::class.java)
-        // launching a new coroutine
-        viewModelScope.launch {
-            Log.d("GetWeatherResults: ", "starting API call")
-            val result = weatherApi.getDailyWeatherForSevenDays()
-            if (result != null){
-                // Checking the results
-                Log.d("GetWeatherResults: ", result.body().toString())
-                if (result.isSuccessful && result.body() != null) {
-                    val resultBody = result.body()!!  // Extract WeatherData from the response
-                    val weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
-                    Log.d("GetWeatherResults:", "list of result converted: $weatherDisplay")
-                    val displayUnit = WeatherConverter().getDailyUnits(resultBody)
-                    Log.d("GetWeatherResults:", "daily units: $displayUnit")
-                } else {
-                    // Handle unsuccessful response or null body
-                }
+        viewModelScope.launch { // launching a new coroutine
+            if(weatherModel.fetchWeatherNextSevenDays()){
+                weatherModel.weatherDisplay
+                weatherModel.displayUnit
             }
-            else{
-                Log.d("GetWeatherResults:", result)
-            }
-            Log.d("GetWeatherResults: ", result.body().toString())
         }
-
     }
 }
