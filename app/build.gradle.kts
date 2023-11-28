@@ -69,6 +69,7 @@ dependencies {
     // GSON
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("androidx.room:room-common:2.6.0")
+    implementation("com.google.android.material:material:1.10.0")
     // coroutine
 
     val coroutinesVersion = "1.7.1"

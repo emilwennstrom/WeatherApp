@@ -1,10 +1,11 @@
 package algot.emil.api
+import android.util.Log
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 
-private interface IWeatherApi {
+private interface MeteoApi {
     @GET("v1/forecast")
     suspend fun getDailyWeatherForSevenDaysByCoordinates(
         @Query("latitude") latitude: Float,
@@ -23,6 +24,12 @@ private interface IWeatherApi {
 
 
 
+private interface GeocodeApi {
+
+    @GET("/search")
+    suspend fun getCoordinatesAndDisplayName(
+        @Query("q") place: String
+    ) : Response<List<PlaceData>>
 
 }
 
@@ -33,12 +40,22 @@ object WeatherAPI {
         longitude: Float
     ): Response<WeatherData> {
 
-       val geoInstance = Retrofit.geoCodeInstance.create(IWeatherApi::class.java)
+       val geoInstance = Retrofit.geoCodeInstance.create(GeocodeApi::class.java)
+
+        val data = geoInstance.getCoordinatesAndDisplayName("Repslagaregatan 5b Nyköping")
+
+        Log.d("TAG", data.body().toString())
+
+        val firstData = data.body()?.get(0)
+
+        val lat = firstData?.lat?.toFloat()
+        val long = firstData?.lon?.toFloat()
 
 
-
-       val meteoInstance = Retrofit.meteoInstance.create(IWeatherApi::class.java)
-       return meteoInstance.getDailyWeatherForSevenDaysByCoordinates(latitude, longitude)
+       val meteoInstance = Retrofit.meteoInstance.create(MeteoApi::class.java)
+        if (lat != null && long != null)
+            return meteoInstance.getDailyWeatherForSevenDaysByCoordinates(lat, long)
+        else throw Exception()
 
     }
 
