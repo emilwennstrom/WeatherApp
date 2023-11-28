@@ -65,4 +65,50 @@ class WeatherConverter {
         val dailyUnits = DailyUnits(time, weather_code,temperature_2m_max)
         return dailyUnits;
     }
+
+
+    /**
+     * converts WeatherData-object parsed from API to a display-friendly version of weatherdata: "DailyWeatherDisplay"
+     */
+    fun getHourlyWeatherDisplay(weatherData: HourlyWeatherData): List<HourlyDataDisplay> {
+        val displayList = mutableListOf<HourlyDataDisplay>()
+        for (index in weatherData.hourly.time.indices) {
+            val weatherCode = weatherData.hourly.weather_code[index]
+            val time = weatherData.hourly.time[index]
+            val temperature = weatherData.hourly.temperature_2m[index]
+            val relativeHumidity = weatherData.hourly.relative_humidity_2m[index]
+            val precipitationProbability = weatherData.hourly.precipitation_probability[index]
+            val windSpeed = weatherData.hourly.wind_speed_10m[index]
+            val windDirection = weatherData.hourly.wind_direction_10m[index]
+            val weatherState = convertIntToWeatherCode(weatherCode)
+
+            val display = HourlyDataDisplay(
+                time = time,
+                temperature_2m = temperature,
+                relative_humidity_2m = relativeHumidity,
+                precipitation_probability = precipitationProbability,
+                weather_state = weatherState,
+                wind_speed_10m = windSpeed,
+                wind_direction_10m = windDirection
+            )
+            displayList.add(display)
+        }
+        return displayList
+    }
+
+
+
+
+    fun getHourlyUnits(weatherData: HourlyWeatherData): HourlyUnits{
+        val time = weatherData.hourly_units.time
+        val weather_code = weatherData.hourly_units.weather_code
+        val temperature_2m = weatherData.hourly_units.temperature_2m
+        val relative_humidity_2m =weatherData.hourly_units.relative_humidity_2m
+        val wind_direction_10m = weatherData.hourly_units.wind_direction_10m
+        val wind_speed_10m = weatherData.hourly_units.wind_speed_10m
+        val precipitation_probability = weatherData.hourly_units.precipitation_probability
+        val dailyUnits = HourlyUnits(time,temperature_2m, relative_humidity_2m,precipitation_probability,
+            weather_code, wind_speed_10m,wind_direction_10m)
+        return dailyUnits;
+    }
 }

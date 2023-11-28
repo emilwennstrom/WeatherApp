@@ -16,7 +16,6 @@ class WeatherModel(persistenceContext: PersistenceContext) {
 
     var weatherDisplay: List<DailyWeatherDisplay> ?= null
     var displayUnit: DailyUnits?= null
-
     var temperatureUnit: String?="C"
 
 

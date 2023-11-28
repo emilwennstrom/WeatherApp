@@ -13,6 +13,14 @@ private interface IWeatherApi {
     ) : Response<WeatherData>
 
 
+    @GET("v1/forecast")
+    suspend fun getHourlyWeatherByDaysAndByCoordinates(
+        @Query("latitude") latitude: Float,
+        @Query("longitude") longitude: Float,
+        @Query("hourly") daily: String = "hourly=temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m",
+        @Query("forecast_days") days: Int=2
+    ) : Response<HourlyWeatherData>
+
 
 
 
