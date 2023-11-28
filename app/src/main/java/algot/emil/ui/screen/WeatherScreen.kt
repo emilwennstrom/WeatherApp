@@ -5,11 +5,9 @@ import algot.emil.ui.theme.WeatherAppTheme
 import algot.emil.ui.viewmodel.WeatherVM
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -28,14 +26,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 @Composable
-fun WeatherScreen(weatherVM: WeatherVM = viewModel()){
+fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     //Greeting(name = weatherVM.name.collectAsState().value);
-    if(isLandscape){
+    if (isLandscape) {
         LandscapeScreen(vm = weatherVM)
-    }else{
+    } else {
         PortraitScreen(vm = weatherVM)
     }
 
@@ -43,28 +41,31 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()){
 
 
 @Composable
-private fun PortraitScreen(vm: WeatherVM){
-    Greeting(name = "tja");
+private fun PortraitScreen(vm: WeatherVM) {
+    Greeting(name = "tja")
     val isLoading = vm.isLoading.collectAsState()
 
     LaunchedEffect(Unit) {
         vm.getWeatherNextSevenDays()
     }
 
-    Column{
-        Column (modifier = Modifier
-            .padding(42.dp)
-            .weight(0.8f)
-        ){
-            if(!isLoading.value){
-                Row{
-                    weatherForSevenDays(vm = vm, 1)
+    Column {
+        Column(
+            modifier = Modifier
+                .padding(42.dp)
+                .weight(0.8f)
+        ) {
+            if (!isLoading.value) {
+                Row {
+                    WeatherForSevenDays(vm = vm, 1)
                 }
             }
         }
-        Column (modifier = Modifier
-            .padding(42.dp)
-            .weight(0.2f),){
+        Column(
+            modifier = Modifier
+                .padding(42.dp)
+                .weight(0.2f),
+        ) {
             Button(
                 onClick = {
                     vm.getWeatherNextSevenDays()
@@ -81,17 +82,18 @@ private fun PortraitScreen(vm: WeatherVM){
 }
 
 
-
 @Composable
-private fun LandscapeScreen(vm: WeatherVM){
-    Greeting(name = "horisonetelll ");
+private fun LandscapeScreen(vm: WeatherVM) {
+    Greeting(name = "horisonetelll ")
 }
 
 
 @Composable
-private fun weatherForSevenDays(vm:WeatherVM, index:Int){
+private fun WeatherForSevenDays(vm: WeatherVM, index: Int) {
     val allWeather by vm.allWeather.collectAsState(initial = listOf())
     val temperatureUnit by vm.temperatureUnit.collectAsState()
+    vm.loadDayOfWeek(index)
+    val currentDay by vm.dayOfWeek.collectAsState()
 
     Box(
         modifier = Modifier
@@ -115,8 +117,9 @@ private fun weatherForSevenDays(vm:WeatherVM, index:Int){
         contentAlignment = Alignment.Center
     ) {
         Text(text = " $temperatureUnit")
-        //${allWeather.get(3).temperature} +
     }
+
+    Text(text = " $currentDay}")
 
 }
 
@@ -133,6 +136,6 @@ private fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 private fun GreetingPreview() {
     WeatherAppTheme {
-        WeatherScreen();
+        WeatherScreen()
     }
 }

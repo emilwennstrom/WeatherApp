@@ -1,9 +1,16 @@
 package algot.emil.api
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Query
 
 
 interface WeatherApi {
-    @GET("v1/forecast?latitude=52.52&longitude=13.41&daily=weather_code,temperature_2m_max")
-    suspend fun getDailyWeatherForSevenDays() : Response<WeatherData>
+    @GET("v1/forecast")
+    suspend fun getDailyWeatherForSevenDays(
+        @Query("latitude") latitude: Float,
+        @Query("longitude") longitude: Float,
+        @Query("daily") daily: String = "weather_code,temperature_2m_max"
+    ) : Response<WeatherData>
+
+
 }

@@ -12,6 +12,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 
@@ -27,6 +29,11 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private val _name = MutableStateFlow("Algot")
 
     val allWeather: Flow<List<Weather>> = weatherModel.allWeather
+
+    private val _dayOfWeek = MutableStateFlow<Weather?>(null)
+    val dayOfWeek: StateFlow<Weather?> = _dayOfWeek.asStateFlow()
+
+
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -63,4 +70,14 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
             }
         }
     }
+
+    fun loadDayOfWeek(dayOfWeek: Int) {
+        viewModelScope.launch {
+            weatherModel.getWeather(dayOfWeek.toLong()).collect {
+                weather -> _dayOfWeek.value = weather
+            }
+        }
+
+    }
+
 }
