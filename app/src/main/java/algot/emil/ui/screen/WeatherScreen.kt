@@ -48,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -218,22 +219,29 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
                     //Spacer(modifier = Modifier.width(8.dp))
                     weatherImage(vm = vm, weatherState = weather.weatherState.toString())
                     //Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${weather.temperature} °C ",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+
+                    Column{
+                        Text(
+                            text = "${weather.temperature} °C ",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                     Text(
                         text = "rel. humidity: ${weather.relativeHumidity} % ",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "precipitation prob.: ${weather.precipitationProbability} %",
+                        text = "Precip. prob.: ${weather.precipitationProbability} %",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    Text(
-                        text = "wind speed: ${weather.windSpeed} km/h",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Row{
+                        windImage(vm = vm, degrees =weather.windDirection)
+                        Text(
+                            text = "${weather.windSpeed} km/h",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
                 }
             }
         }
@@ -271,6 +279,23 @@ private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun windImage(vm: WeatherVM, degrees: Int) {
+    Box(
+        modifier = Modifier,
+            //.height(48.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(R.drawable.arrow),
+            contentDescription = "degrees: $degrees°",
+            modifier = Modifier.graphicsLayer {
+                rotationZ = degrees.toFloat() // Rotate in z-direction
+            }
+        )
     }
 }
 
