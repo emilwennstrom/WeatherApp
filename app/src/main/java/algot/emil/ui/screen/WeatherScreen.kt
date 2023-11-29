@@ -215,7 +215,7 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = weather.time + " ", style = MaterialTheme.typography.bodyMedium
+                        text = weather.time.takeLast(5) + " ", style = MaterialTheme.typography.bodyMedium
                     )
                     //Spacer(modifier = Modifier.width(8.dp))
                     weatherImage(vm = vm, weatherState = weather.weatherState.toString())
