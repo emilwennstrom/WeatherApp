@@ -54,15 +54,6 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private val _topBarState = MutableStateFlow(TopBarProperties())
     val topBarState: StateFlow<TopBarProperties> = _topBarState.asStateFlow()
 
-    private val _currentPlace = MutableStateFlow("")
-    val currentPlace: StateFlow<String> = _currentPlace
-
-
-
-    private val _isSearching = MutableStateFlow(false)
-    val isSearching = _isSearching.asStateFlow()
-
-
     private val _allWeatherHourly = MutableStateFlow(emptyList<WeatherHourly>())
     val allWeatherHourly = _allWeatherHourly.asStateFlow()
 
@@ -111,7 +102,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private fun getPlaceFromDb(){
         viewModelScope.launch {
             placeRepository.get().collect {
-                _currentPlace.value = it
+                _topBarState.value = topBarState.value.copy(currentPlace = it)
             }
         }
     }
@@ -159,7 +150,6 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         updateTopBarTextField(query)
         if (getConnectivity()) {
             viewModelScope.launch {
-                delay(1000)
                 if (query.isNotEmpty()) {
                     weatherModel.searchPlaces(query).collect { placeList ->
                         _places.value = placeList

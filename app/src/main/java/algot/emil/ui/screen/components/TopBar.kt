@@ -23,7 +23,6 @@ private const val TAG = "TopBar"
 fun TopBar(
     modifier: Modifier = Modifier,
     topBarState: TopBarProperties,
-    currentPlace: String?,
     onSearch: (String) -> Unit,
     showSearch: () -> Unit,
     isConnected: () -> Boolean,
@@ -32,41 +31,50 @@ fun TopBar(
     weatherIcon: Int
 ) {
 
-    CenterAlignedTopAppBar(
-        modifier = modifier.fillMaxWidth(),
-        title = { if (topBarState.isSearchShown && isConnected()) {
-            SearchBar(onSearch = onSearch, searchText = topBarState.searchText)
-        }
-        else {
-            if (!isConnected()){
-                showSnackBar("No connection", SnackbarDuration.Short)
+    CenterAlignedTopAppBar(modifier = modifier.fillMaxWidth(),
+        title = {
+            if (topBarState.isSearchShown && isConnected()) {
+                SearchBar(onSearch = onSearch, searchText = topBarState.searchText)
+            } else {
+                if (!isConnected()) {
+                    showSnackBar("No connection", SnackbarDuration.Short)
+                }
+                Text(
+                    text = topBarState.currentPlace,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                resetTextField("")
             }
-            if (currentPlace != null) {
-                Text(text = currentPlace, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            resetTextField("")
-        }},
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors (
+        },
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
             navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            titleContentColor =  MaterialTheme.colorScheme.onPrimaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
-        navigationIcon = { Icon(painter = painterResource(id = weatherIcon), contentDescription = null) },
+        navigationIcon = {
+            Icon(
+                painter = painterResource(id = weatherIcon),
+                contentDescription = null
+            )
+        },
         actions = {
             IconButton(onClick = {
                 if (isConnected()) {
                     showSearch()
-                }
-                else {
+                } else {
                     showSnackBar("No connection", SnackbarDuration.Short)
                 }
             }) {
-                Icon(painter = painterResource(id = R.drawable.search_icon), contentDescription = null)
+                Icon(
+                    painter = painterResource(id = R.drawable.search_icon),
+                    contentDescription = null
+                )
 
             }
-        }
-    )
+        })
 
 }

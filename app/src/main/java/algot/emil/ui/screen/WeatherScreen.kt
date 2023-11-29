@@ -1,6 +1,8 @@
 package algot.emil.ui.screen
 
 import algot.emil.R
+import algot.emil.persistence.Weather
+import algot.emil.persistence.WeatherHourly
 import algot.emil.ui.screen.components.SearchResultScreen
 import algot.emil.ui.screen.components.TopBar
 import algot.emil.ui.viewmodel.WeatherVM
@@ -82,8 +84,8 @@ private fun PortraitScreen(
     val isLoading by vm.isLoading.collectAsState()
     val places by vm.places.collectAsState()
     val topBarState by vm.topBarState.collectAsState()
-    val currentPlace by vm.currentPlace.collectAsState()
     val sevenDayWeather by vm.allWeather.collectAsState()
+    val hourlyWeather by vm.allWeatherHourly.collectAsState()
 
 
 
@@ -96,7 +98,6 @@ private fun PortraitScreen(
     ) {
 
         Row {
-
             var icon = R.drawable.sunny
             if (sevenDayWeather.isNotEmpty()){
                 icon = getPictureName(sevenDayWeather[0].weatherState.toString())
@@ -104,7 +105,6 @@ private fun PortraitScreen(
 
             TopBar(
                 topBarState = topBarState,
-                currentPlace = currentPlace,
                 onSearch = vm::onSearchTextChanged,
                 showSearch = vm::showSearch,
                 isConnected = vm::getConnectivity,
@@ -127,13 +127,12 @@ private fun PortraitScreen(
 
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
         if (!isLoading) {
-
             Row(
                 modifier = Modifier
                     .weight(0.2f)
                     .fillMaxSize()
             ) {
-                ListSevenDays(vm = vm)
+                ListSevenDays(sevenDayWeather = sevenDayWeather, modifier = modifier, vm::convertDateToWeekday)
             }
             Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
             Row(
@@ -141,7 +140,7 @@ private fun PortraitScreen(
                     .weight(0.8f)
                     .fillMaxSize()
             ) {
-                ListHourly(vm = vm)
+                ListHourly(hourlyWeather)
             }
         }
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
@@ -158,12 +157,9 @@ private fun LandscapeScreen(vm: WeatherVM, modifier: Modifier) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
-    val allWeather by vm.allWeatherHourly.collectAsState()
-    val temperatureUnit by vm.temperatureUnit.collectAsState()
-
+private fun ListHourly(hourlyWeather: List<WeatherHourly>, modifier: Modifier = Modifier) {
     LazyColumn {
-        items(allWeather) { weather ->
+        items(hourlyWeather) { weather ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -180,17 +176,14 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
                         text = weather.time.takeLast(5) + " ",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    //Spacer(modifier = Modifier.width(8.dp))
-                    weatherImage(weatherState = weather.weatherState.toString())
-                    //Spacer(modifier = Modifier.width(8.dp))
-
+                    WeatherImage(weatherState = weather.weatherState.toString())
                     Column {
                         Text(
                             text = "${weather.temperature} °C ",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Row {
-                            windImage(vm = vm, degrees = weather.windDirection)
+                            WindImage(degrees = weather.windDirection)
                             Text(
                                 text = "${weather.windSpeed} km/h",
                                 style = MaterialTheme.typography.bodyMedium
@@ -218,12 +211,14 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
-    val allWeather by vm.allWeather.collectAsState()
-    val temperatureUnit by vm.temperatureUnit.collectAsState()
+private fun ListSevenDays(
+    sevenDayWeather: List<Weather>,
+    modifier: Modifier = Modifier,
+    convertDateToWeekday: (String) -> String
+) {
 
     LazyRow {
-        items(allWeather) { weather ->
+        items(sevenDayWeather) { weather ->
             Card(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -238,10 +233,10 @@ private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
 
                 ) {
                     Text(
-                        text = vm.convertDateToWeekday(weather.time) + " ",
+                        text = convertDateToWeekday(weather.time) + " ",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    weatherImage(weatherState = weather.weatherState.toString())
+                    WeatherImage(weatherState = weather.weatherState.toString())
                     Text(
                         text = "${weather.temperature} °C",
                         style = MaterialTheme.typography.bodyMedium
@@ -253,10 +248,9 @@ private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun windImage(vm: WeatherVM, degrees: Int) {
+private fun WindImage(degrees: Int) {
     Box(
         modifier = Modifier,
-        //.height(48.dp),
         contentAlignment = Alignment.Center
     ) {
         Image(painter = painterResource(R.drawable.arrow),
@@ -268,7 +262,7 @@ private fun windImage(vm: WeatherVM, degrees: Int) {
 }
 
 @Composable
-private fun weatherImage(weatherState: String) {
+private fun WeatherImage(weatherState: String) {
     Box(
         modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
     ) {
@@ -282,40 +276,6 @@ private fun weatherImage(weatherState: String) {
             painter = painterResource(getPictureName(weatherState)),
             contentDescription = weatherState
         )
-    }
-}
-
-
-@Composable
-private fun WeatherForSevenDays(vm: WeatherVM, index: Int) {
-    val allWeather by vm.allWeather.collectAsState(initial = listOf())
-    val temperatureUnit by vm.temperatureUnit.collectAsState()
-    vm.loadDayOfWeek(index)
-    val currentDay by vm.dayOfWeek.collectAsState()
-    val test by vm.dailyWeather.collectAsState()
-
-    Row {
-        Box(
-            modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
-        ) {
-            // Background image
-            Image(
-                painter = painterResource(R.drawable.ic_launcher_background),
-                contentDescription = "Background"
-            )
-            // Foreground image
-            Image(
-                painter = painterResource(R.drawable.sunny), contentDescription = "Sunny Weather"
-            )
-        }
-        Box(
-            modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
-        ) {
-            Text(text = "${test[index].temperature_2m_max}  $temperatureUnit\n")
-            Text(text = test[index].time)
-        }
-
-        //Text(text = " $currentDay}")
     }
 }
 
