@@ -24,8 +24,8 @@ fun SearchBar(
         label = { Text("Search") },
         modifier = Modifier.fillMaxWidth(),
         colors = TextFieldDefaults.textFieldColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            textColor = MaterialTheme.colorScheme.onPrimaryContainer
+            containerColor = MaterialTheme.colorScheme.onSecondary,
+            textColor = MaterialTheme.colorScheme.secondary
         ),
         shape = RectangleShape
     )

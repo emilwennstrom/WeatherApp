@@ -25,6 +25,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -162,6 +164,10 @@ private fun ListHourly(hourlyWeather: List<WeatherHourly>, modifier: Modifier = 
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(2.dp),
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
             ) {
                 FlowRow(
                     modifier = Modifier
@@ -225,13 +231,17 @@ private fun ListSevenDays(
                     .aspectRatio(1f / 1f),
                 onClick = {
                     updateHourly(weather.time)
-                }
+                },
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(12.dp)
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceEvenly
 
                 ) {
                     Text(
@@ -266,13 +276,13 @@ private fun WindImage(degrees: Int) {
 @Composable
 private fun WeatherImage(weatherState: String) {
     Box(
-        modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center
     ) {
         // Background image
-        Image(
+       /* Image(
             painter = painterResource(R.drawable.ic_launcher_background),
             contentDescription = "Background"
-        )
+        )*/
         // Foreground image
         Image(
             painter = painterResource(getPictureName(weatherState)),
