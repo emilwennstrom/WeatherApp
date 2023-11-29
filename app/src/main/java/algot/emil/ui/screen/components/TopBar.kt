@@ -28,18 +28,18 @@ fun TopBar(
     onSearch: (String) -> Unit,
     showSearch: () -> Unit,
     isConnected: () -> Boolean,
-    showSnackBar: (String, SnackbarDuration) -> Unit
+    showSnackBar: (String, SnackbarDuration) -> Unit,
+    resetTextField: (String) -> Unit
     ) {
-
-    val isSearchShown = topBarState.isSearchShown
-    val searchText = topBarState.searchText
-
 
     CenterAlignedTopAppBar(
         modifier = modifier.fillMaxWidth(),
-        title = { if (topBarState.isSearchShown) {SearchBar(onSearch = onSearch, searchText = topBarState.searchText) } else { Text(
-            text = "PLACE"
-        ) } },
+        title = { if (topBarState.isSearchShown && isConnected()) {SearchBar(onSearch = onSearch, searchText = topBarState.searchText) }
+        else {
+            Text(text = "")
+            resetTextField("")
+            showSnackBar("No connection", SnackbarDuration.Short)
+        } },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors (
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,

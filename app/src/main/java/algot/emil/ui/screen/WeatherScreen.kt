@@ -1,6 +1,7 @@
 package algot.emil.ui.screen
 
 import algot.emil.R
+import algot.emil.ui.screen.components.SearchResultScreen
 import algot.emil.ui.screen.components.TopBar
 import algot.emil.ui.viewmodel.WeatherVM
 import android.content.res.Configuration
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -27,7 +27,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -107,37 +106,12 @@ private fun PortraitScreen(scope: CoroutineScope, snackbarHostState: SnackbarHos
                     message,
                     duration
                 )
-            })
+            }, resetTextField = vm::updateTextField)
         }
 
         if (topBarState.searchText.isNotEmpty()) {
             Row(modifier.weight(1.2f)) {
-                ModalDrawerSheet(modifier = Modifier.fillMaxSize()) {
-                    LazyColumn(
-                        contentPadding = PaddingValues(10.dp),
-                        modifier = modifier.fillMaxHeight()
-
-                    ) {
-                        items(places) { value ->
-                            Card(
-                                modifier = modifier
-                                    .fillMaxSize()
-                                    .padding(2.dp)
-                                    .height(50.dp),
-                                onClick = {vm.updateWeatherFromQuery(value)}
-                            ) {
-                                Row(
-                                    modifier = modifier
-                                        .fillMaxSize()
-                                        .padding(horizontal = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(text = value.display_name , style = MaterialTheme.typography.bodyMedium)
-                                }
-                            }
-                        }
-                    }
-                }
+                SearchResultScreen(modifier = Modifier, places, vm::updateWeatherFromQuery)
             }
         }
 

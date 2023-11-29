@@ -63,14 +63,6 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private val _isSearching = MutableStateFlow(false)
     val isSearching = _isSearching.asStateFlow()
 
-    private val somePlaceData = listOf(
-        PlaceData(
-            display_name = "Stockholm",
-            lat = "59",
-            lon = "18"
-        )
-
-    )
 
     private val _allWeatherHourly = MutableStateFlow(emptyList<WeatherHourly>())
     val allWeatherHourly = _allWeatherHourly.asStateFlow()
@@ -78,7 +70,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private val _allWeather = MutableStateFlow(emptyList<Weather>())
     val allWeather = _allWeather.asStateFlow()
 
-    private val _places = MutableStateFlow(somePlaceData)
+    private val _places = MutableStateFlow(emptyList<PlaceData>())
     val places = _places.asStateFlow()
 
 
@@ -136,26 +128,36 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     }
 
     fun updateWeatherFromQuery(placeData: PlaceData) {
-        viewModelScope.launch {
-            val success = weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
-            if (success.first && success.second) {
-                _isLoading.value = false
+        if (getConnectivity()) {
+            viewModelScope.launch {
+                val success = weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
+                if (success.first && success.second) {
+                    _isLoading.value = false
+                }
             }
+            updateTextField("")
         }
-        _topBarState.value = topBarState.value.copy(searchText = "")
+    }
+
+    fun updateTextField(text: String) {
+        _topBarState.value = topBarState.value.copy(searchText = text)
     }
 
     fun onSearchTextChanged(query: String) {
-        _topBarState.value = topBarState.value.copy(searchText = query)
-        viewModelScope.launch {
-            delay(1000)
-            if (query.isNotEmpty()) {
-                weatherModel.searchPlaces(query).collect { placeList ->
-                    _places.value = placeList
+        updateTextField(query)
+        if (getConnectivity()) {
+            viewModelScope.launch {
+                delay(1000)
+                if (query.isNotEmpty()) {
+                    weatherModel.searchPlaces(query).collect { placeList ->
+                        _places.value = placeList
+                    }
+
                 }
 
             }
-
+        } else {
+            _places.value = emptyList()
         }
     }
 
