@@ -10,16 +10,20 @@ import algot.emil.api.WeatherApi
 import algot.emil.api.WeatherConverter
 import algot.emil.persistence.Weather
 import algot.emil.persistence.WeatherHourly
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class WeatherModel(persistenceContext: PersistenceContext) {
+class WeatherModel(persistenceContext: PersistenceContext,  connectivity: ConnectivityManager) {
     private val weatherDao = persistenceContext.weatherDao
     val allWeather = weatherDao.getAll()
     private val weatherHourlyDao = persistenceContext.weatherHourlyDao
     val allWeatherHourly = weatherHourlyDao.getAll()
-
+    private val connectivityManager = connectivity
 
     var weatherDisplay: List<DailyWeatherDisplay> ?= null
     var displayUnit: DailyUnits?= null
@@ -29,47 +33,64 @@ class WeatherModel(persistenceContext: PersistenceContext) {
     var weatherHourlyDisplay: List<HourlyDataDisplay> ?= null
     var hourlyUnits: HourlyUnits ?=null
 
+    /**
+     * returns true if successfully fetched weather from API or from database (if no internet connection)
+     */
     suspend fun fetchWeatherNextSevenDays(): Boolean {
-        val city = "Stockholm"
-        Log.d("GetWeatherResults: ", "starting API call")
-        val result = WeatherApi.getDailyWeatherForSevenDays( 52.52F, 13.41F)
-        // Checking the results
-        Log.d("GetWeatherResults: ", result.body().toString())
-        if (result.isSuccessful && result.body() != null) {
-            val resultBody = result.body()!!  // Extract WeatherData from the response
-            weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
-            Log.d("GetWeatherResults:", "list of result converted: "+ weatherDisplay.toString())
-            displayUnit = WeatherConverter().getDailyUnits(resultBody)
-            Log.d("GetWeatherResults:", "daily units: "+ displayUnit.toString())
-            temperatureUnit = displayUnit!!.temperature_2m_max
-
-            replaceWeatherDataInDb()
-
-
+        if(isNetworkAvailable()){
+            val city = "Stockholm"
+            Log.d("GetWeatherResults: ", "starting API call")
+            val result = WeatherApi.getDailyWeatherForSevenDays( 52.52F, 13.41F)
+            // Checking the results
+            Log.d("GetWeatherResults: ", result.body().toString())
+            if (result.isSuccessful && result.body() != null) {
+                val resultBody = result.body()!!  // Extract WeatherData from the response
+                weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
+                Log.d("GetWeatherResults:", "list of result converted: "+ weatherDisplay.toString())
+                displayUnit = WeatherConverter().getDailyUnits(resultBody)
+                Log.d("GetWeatherResults:", "daily units: "+ displayUnit.toString())
+                temperatureUnit = displayUnit!!.temperature_2m_max
+                replaceWeatherDataInDb()
+                return true
+            }
+            Log.d("GetWeatherResults: ", result.body().toString())
+            return false
+        }else{
+            Log.d("GetWeatherResults", "retreiving DailyWeather from database as user has no internet connection")
+            weatherDao.getAll()
             return true
         }
-        Log.d("GetWeatherResults: ", result.body().toString())
-        return false
+
     }
 
-    suspend fun fetchWeatherNextHours(): Boolean {
-        val city = "Stockholm"
-        Log.d("GetWeatherResultsHourly: ", "starting API call")
-        val result = WeatherApi.getHourlyWeatherForTwoDays( 52.52F, 13.41F)
-        Log.d("GetWeatherResultsHourly: ", result.body().toString())  // Checking the results
-        if (result.isSuccessful && result.body() != null) {
-            val resultBody = result.body()!!  // Extract WeatherData from the response
-            weatherHourlyDisplay = WeatherConverter().getHourlyWeatherDisplay(resultBody)
-            Log.d("GetWeatherResultsHourly:", "list of result converted: "+ weatherHourlyDisplay.toString())
-            hourlyUnits = WeatherConverter().getHourlyUnits(resultBody)
-            Log.d("GetWeatherResultsHourly:", "daily units: "+ hourlyUnits.toString())
-            //temperatureUnit = hourlyUnits!!.temperature_2m_max
 
-            replaceHourlyWeatherDataInDb()
+    suspend fun fetchWeatherNextHours(): Boolean {
+        if(isNetworkAvailable()) {
+            val city = "Stockholm"
+            Log.d("GetWeatherResultsHourly: ", "starting API call")
+            val result = WeatherApi.getHourlyWeatherForTwoDays(52.52F, 13.41F)
+            Log.d("GetWeatherResultsHourly: ", result.body().toString())  // Checking the results
+            if (result.isSuccessful && result.body() != null) {
+                val resultBody = result.body()!!  // Extract WeatherData from the response
+                weatherHourlyDisplay = WeatherConverter().getHourlyWeatherDisplay(resultBody)
+                Log.d(
+                    "GetWeatherResultsHourly:",
+                    "list of result converted: " + weatherHourlyDisplay.toString()
+                )
+                hourlyUnits = WeatherConverter().getHourlyUnits(resultBody)
+                Log.d("GetWeatherResultsHourly:", "daily units: " + hourlyUnits.toString())
+                //temperatureUnit = hourlyUnits!!.temperature_2m_max
+
+                replaceHourlyWeatherDataInDb()
+                return true
+            }
+            Log.d("GetWeatherResultsHourly: ", "error: " + result.body().toString())
+            return false
+        }else{
+            Log.d("GetWeatherResultsHourly", "retreiving HourlyWeather from database as user has no internet connection")
+            weatherHourlyDao.getAll()
             return true
         }
-        Log.d("GetWeatherResultsHourly: ", "error: " + result.body().toString())
-        return false
     }
 
 
@@ -116,6 +137,35 @@ class WeatherModel(persistenceContext: PersistenceContext) {
         }
         emit(result) // Emit the result as a Flow
     }
+
+    fun isNetworkAvailable():Boolean {
+        val network = connectivityManager?.activeNetwork
+        val capabilities = connectivityManager?.getNetworkCapabilities(network)
+        if(capabilities != null &&
+            (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))){
+            return true
+        }else{
+            return false
+        }
+    }
+
+    /**
+     * optional. isnt used
+     */
+    fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork ?: return false
+            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+        } else {
+            val networkInfo = connectivityManager.activeNetworkInfo ?: return false
+            return networkInfo.isConnected
+        }
+    }
+
+
 
 
 

@@ -8,6 +8,8 @@ import algot.emil.model.WeatherModel
 import algot.emil.persistence.Weather
 import algot.emil.persistence.WeatherHourly
 import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
@@ -27,9 +29,11 @@ interface WeatherViewModel
 class WeatherVM(application: Application) : AndroidViewModel(application = application),
     WeatherViewModel {
 
+    private val connectivity = application.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val persistenceContext = application as PersistenceContext
     private val weatherModel: WeatherModel =
-        WeatherModel(persistenceContext) // Skapa en instans av WeatherModel
+        WeatherModel(persistenceContext, connectivity) // Skapa en instans av WeatherModel
+
     private val _name = MutableStateFlow("Algot")
 
     val allWeather: Flow<List<Weather>> = weatherModel.allWeather
