@@ -9,6 +9,8 @@ import androidx.room.PrimaryKey
 data class Place (
 
     @PrimaryKey(autoGenerate = false) val id: Long = 1,
-    @ColumnInfo(name = "name") val name: String
+    @ColumnInfo(name = "name") val name: String,
+    @ColumnInfo(name = "latitude") val latitude: Float,
+    @ColumnInfo(name = "longitude") val longitude: Float
 
 )

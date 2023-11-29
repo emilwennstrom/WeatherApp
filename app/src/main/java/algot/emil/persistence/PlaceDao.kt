@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.Flow
 interface PlaceDao {
 
     @Query("SELECT name FROM place WHERE place.id = 1")
-    fun get() : Flow<String>
+    fun getName() : Flow<String>
+
+    @Query("SELECT * FROM place where id = 1")
+    fun getPlace() : Flow<Place>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(place: Place);

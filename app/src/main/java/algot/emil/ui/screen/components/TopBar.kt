@@ -39,11 +39,13 @@ fun TopBar(
                 if (!isConnected()) {
                     showSnackBar("No connection", SnackbarDuration.Short)
                 }
-                Text(
-                    text = topBarState.currentPlace,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                topBarState.currentPlace?.let {
+                    Text(
+                        text = it,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
                 resetTextField("")
             }

@@ -7,6 +7,7 @@ import algot.emil.data.TopBarProperties
 import algot.emil.enums.WeatherState
 import algot.emil.model.PlaceRepository
 import algot.emil.model.WeatherModel
+import algot.emil.persistence.Place
 import algot.emil.persistence.Weather
 import algot.emil.persistence.WeatherHourly
 import android.app.Application
@@ -15,11 +16,9 @@ import android.net.ConnectivityManager
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -99,9 +98,9 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     }
 
 
-    private fun getPlaceFromDb(){
+    private fun getCurrentPlaceName(){
         viewModelScope.launch {
-            placeRepository.get().collect {
+            placeRepository.getName().collect {
                 _topBarState.value = topBarState.value.copy(currentPlace = it)
             }
         }
@@ -134,7 +133,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                 val success = weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
                 if (success.first && success.second) {
                     _isLoading.value = false
-                    placeRepository.insert(placeData.display_name)
+                    placeRepository.insert(place = Place(name = placeData.display_name, latitude = placeData.lat.toFloat(), longitude = placeData.lon.toFloat()))
                 }
             }
             updateTopBarTextField("")
@@ -194,7 +193,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     init {
 
         getWeatherFromDb()
-        getPlaceFromDb()
+        getCurrentPlaceName()
 
     }
 

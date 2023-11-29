@@ -7,13 +7,16 @@ import kotlinx.coroutines.flow.Flow
 class PlaceRepository(private val placeDao: PlaceDao) {
 
 
-    suspend fun insert(placeName: String){
-        placeDao.insert(Place(name = placeName))
+    suspend fun insert(place: Place){
+        placeDao.insert(place)
     }
 
+    fun getPlace() : Flow<Place> {
+        return placeDao.getPlace()
+    }
 
-    suspend fun get() : Flow<String> {
-        return placeDao.get()
+    fun getName() : Flow<String> {
+        return placeDao.getName()
     }
 
 

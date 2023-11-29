@@ -20,13 +20,15 @@ fun SearchBar(
         onValueChange = onSearch, //onValueChange = onSearch,
         keyboardActions = KeyboardActions(onDone = { onSearch(searchText) }),
         singleLine = true,
-        placeholder = { Text("Enter place") },
         label = { Text("Search") },
         modifier = Modifier.fillMaxWidth(),
         colors = TextFieldDefaults.textFieldColors(
             containerColor = MaterialTheme.colorScheme.onSecondary,
-            textColor = MaterialTheme.colorScheme.secondary
+            textColor = MaterialTheme.colorScheme.secondary,
+            placeholderColor = MaterialTheme.colorScheme.secondary
         ),
+        textStyle = MaterialTheme.typography.bodyLarge,
+        placeholder = { Text("Enter place") },
         shape = RectangleShape
     )
 }
