@@ -136,11 +136,10 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         viewModelScope.launch {
             val success = weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
             if (success.first && success.second) {
-                _dailyWeather.value = weatherModel.weatherDisplay!!
-                _temperatureUnit.value = weatherModel.temperatureUnit!!
+                _isLoading.value = false
             }
         }
-        _isLoading.value = false
+
         Log.d(TAG, placeData.display_name)
     }
 

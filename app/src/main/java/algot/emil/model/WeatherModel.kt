@@ -69,6 +69,7 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
             hourlyUnits = WeatherConverter().getHourlyUnits(resultBody)
             Log.d("GetWeatherResultsHourly:", "daily units: " + hourlyUnits.toString())
             //temperatureUnit = hourlyUnits!!.temperature_2m_max
+            replaceHourlyWeatherDataInDb()
             return true
         }
         return false
