@@ -34,12 +34,16 @@ fun TopBar(
 
     CenterAlignedTopAppBar(
         modifier = modifier.fillMaxWidth(),
-        title = { if (topBarState.isSearchShown && isConnected()) {SearchBar(onSearch = onSearch, searchText = topBarState.searchText) }
+        title = { if (topBarState.isSearchShown && isConnected()) {
+            SearchBar(onSearch = onSearch, searchText = topBarState.searchText)
+        }
         else {
+            if (!isConnected()){
+                showSnackBar("No connection", SnackbarDuration.Short)
+            }
             Text(text = "")
             resetTextField("")
-            showSnackBar("No connection", SnackbarDuration.Short)
-        } },
+        }},
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors (
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
