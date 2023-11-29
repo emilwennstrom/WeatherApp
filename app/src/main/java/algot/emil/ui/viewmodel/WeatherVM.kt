@@ -20,8 +20,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -122,22 +124,27 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         }
     }*/
 
-    suspend fun getWeatherFromDb() {
+    fun getWeatherFromDb() {
         viewModelScope.launch {
             launch {
                 weatherModel.allWeather.collect {
-                        wList -> _allWeather.value = wList
+                        wList ->
+                    _allWeather.value = wList // setting the list
                 }
             }
             launch {
-                weatherModel.allWeatherHourly.collect() {
+                weatherModel.allWeatherHourly.collectLatest {
                         wList -> _allWeatherHourly.value = wList
                 }
             }
         }
+        _isLoading.value = false
     }
 
     fun updateWeatherFromQuery(placeData: PlaceData) {
+        Log.d(TAG, "Lat: " + placeData.lat + " Lon: " + placeData.lon)
+
+
         viewModelScope.launch {
             val success = weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
             if (success.first && success.second) {
@@ -171,33 +178,20 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
 
     }
 
-
-    init {
-
-        viewModelScope.launch {
-            launch {
-                weatherModel.allWeather.collect { wList ->
-                    _allWeather.value = wList
-                }
-            }
-            launch {
-                weatherModel.allWeatherHourly.collect() { wList ->
-                    _allWeatherHourly.value = wList
-                }
-            }
-        }
-
-        for (element in _allWeather.value) {
-            Log.d(TAG, element.weatherState.toString())
-        }
-
-    }
     override fun convertDateToWeekday(dateStr: String): String {
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val date = format.parse(dateStr)
         val calendar = Calendar.getInstance()
-        calendar.time = date
+        if (date != null) {
+            calendar.time = date
+        }
         return calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()) ?: ""
+    }
+
+    init {
+
+        getWeatherFromDb()
+
     }
 
 }

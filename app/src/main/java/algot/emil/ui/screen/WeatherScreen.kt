@@ -77,14 +77,7 @@ private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
     val searchQuery by vm.searchQuery.collectAsState()
     val places by vm.places.collectAsState()
     val isSearching by vm.isSearching.collectAsState()
-
-
-
-
-    LaunchedEffect(Unit) {
-        vm.getWeatherFromDb()
-    }
-
+    
     Column(
         modifier = Modifier
             .background(color = MaterialTheme.colorScheme.background)
@@ -106,7 +99,7 @@ private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
                 ),
                 navigationIcon = { Icon(painter = painterResource(id = R.drawable.sunny), contentDescription = null)},
                 actions = {
-                    IconButton(onClick = { /*TODO*/ }) {
+                    IconButton(onClick = { vm.getWeatherFromDb() }) {
                         Icon(painter = painterResource(id = R.drawable.settings), contentDescription = null)
                         
                     }
@@ -238,6 +231,8 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
 private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
     val allWeather by vm.allWeather.collectAsState()
     val temperatureUnit by vm.temperatureUnit.collectAsState()
+
+    Log.d("ASDASADS", allWeather.toString())
 
     LazyColumn {
         items(allWeather) { weather ->
