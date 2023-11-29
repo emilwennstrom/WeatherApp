@@ -10,14 +10,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
@@ -149,15 +153,15 @@ private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
         if (!isLoading) {
 
             Row(modifier = Modifier
-                .weight(0.5f)
+                .weight(0.2f)
                 .fillMaxSize()) {
-                ListHourly(vm=vm)
+                ListSevenDays(vm = vm)
             }
             Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
             Row(modifier = Modifier
-                .weight(0.5f)
+                .weight(0.8f)
                 .fillMaxSize()) {
-                ListSevenDays(vm = vm)
+                ListHourly(vm=vm)
             }
         }
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
@@ -195,19 +199,20 @@ private fun LandscapeScreen(vm: WeatherVM, padding: Modifier) {
     //Greeting(name = "horisonetelll ")
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
     val allWeather by vm.allWeatherHourly.collectAsState()
     val temperatureUnit by vm.temperatureUnit.collectAsState()
 
-    LazyColumn {
+    LazyColumn (){
         items(allWeather) { weather ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(2.dp),
             ) {
-                Row(
+                FlowRow(
                     modifier = Modifier
                         .padding(12.dp)
                         .fillMaxWidth(),
@@ -221,11 +226,19 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
                     weatherImage(vm = vm, weatherState = weather.weatherState.toString())
                     //Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "${weather.temperature}$temperatureUnit",
+                        text = "${weather.temperature} °C ",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "humidity: ${weather.relativeHumidity}",
+                        text = "rel. humidity: ${weather.relativeHumidity} % ",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "precipitation prob.: ${weather.precipitationProbability} %",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "wind speed: ${weather.windSpeed} km/h",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -239,26 +252,27 @@ private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
     val allWeather by vm.allWeather.collectAsState()
     val temperatureUnit by vm.temperatureUnit.collectAsState()
 
-    LazyColumn {
+    LazyRow {
         items(allWeather) { weather ->
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(2.dp),
+                    .fillMaxHeight()
+                    .padding(2.dp)
+                    .aspectRatio(1f / 1f),
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .padding(12.dp)
                         .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalAlignment = Alignment.CenterHorizontally
+
                 ) {
                     Text(
                         text = vm.convertDateToWeekday(weather.time ) + " ", style = MaterialTheme.typography.bodyMedium
                     )
                     weatherImage(vm = vm, weatherState = weather.weatherState.toString())
                     Text(
-                        text = "${weather.temperature}$temperatureUnit",
+                        text = "${weather.temperature} °C",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
