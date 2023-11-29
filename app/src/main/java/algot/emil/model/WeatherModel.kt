@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
@@ -97,11 +98,19 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
 
     }
 
+    fun addOneDay(dateStr: String): String {
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = format.parse(dateStr)
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        calendar.add(Calendar.DAY_OF_MONTH, 1)
+        return format.format(calendar.time)
+    }
 
-    private suspend fun fetchWeatherNextHours(lat: Float, lon: Float): Boolean {
+    private suspend fun fetchWeatherNextHoursWithStartDate(lat: Float, lon: Float, startDate:String): Boolean {
         if(isNetworkAvailable()){
             Log.d("GetWeatherResultsHourly: ", "starting API call")
-            val result = WeatherApi.getHourlyWeatherForTwoDays(lat, lon)
+            val result = WeatherApi.getHourlyWeatherWithTimeInterval(lat, lon, startDate,addOneDay(startDate) )
             Log.d("GetWeatherResultsHourly: ", result.body().toString())  // Checking the results
             if (result.isSuccessful && result.body() != null) {
                 val resultBody = result.body()!!  // Extract WeatherData from the response
@@ -112,7 +121,6 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
                 )
                 hourlyUnits = WeatherConverter().getHourlyUnits(resultBody)
                 Log.d("GetWeatherResultsHourly:", "daily units: " + hourlyUnits.toString())
-                //temperatureUnit = hourlyUnits!!.temperature_2m_max
                 replaceHourlyWeatherDataInDb()
                 return true
             }
@@ -122,6 +130,19 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
             return true
         }
 
+    }
+
+
+    private suspend fun fetchWeatherNextHours(lat: Float, lon: Float): Boolean {
+        println("GetWeatherResultsHourly")
+        Log.d("GetWeatherResultsHourly", "inside fetchWeatherNextHours")
+        Log.d("GetWeatherResultsHourly", "getCurrentDate: " + getCurrentDate())
+        return fetchWeatherNextHoursWithStartDate(lat,lon,getCurrentDate())
+    }
+    fun getCurrentDate(): String {
+        val calendar = Calendar.getInstance()
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return format.format(calendar.time)
     }
 
     suspend fun fetchWeatherData(lat: Float, lon: Float): Pair<Boolean, Boolean> {
