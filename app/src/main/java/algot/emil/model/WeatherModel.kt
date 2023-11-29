@@ -15,7 +15,9 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
+import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 
 class WeatherModel(persistenceContext: PersistenceContext, connectivity: ConnectivityManager) {
@@ -61,6 +63,7 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
 
     }
 
+
     private suspend fun fetchWeatherNextHours(lat: Float, lon: Float): Boolean {
         if(isNetworkAvailable()){
             Log.d("GetWeatherResultsHourly: ", "starting API call")
@@ -96,6 +99,7 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
 
 
     private suspend fun replaceWeatherDataInDb() {
+        Log.d("Model", "Replacing data")
         weatherDao.deleteAll()
         var dayNumber = 1L
         for (weather in weatherDisplay!!) {

@@ -1,10 +1,11 @@
 package algot.emil.api
 
+import android.util.Log
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-
+private const val TAG = "WeatherApi"
 private interface MeteoApi {
     @GET("v1/forecast")
     suspend fun getDailyWeatherForSevenDaysByCoordinates(
@@ -42,6 +43,7 @@ object WeatherApi {
     suspend fun getDailyWeatherForSevenDays(
         latitude: Float, longitude: Float
     ): Response<WeatherData> {
+        Log.d(TAG, "In API")
         return meteoInstance.getDailyWeatherForSevenDaysByCoordinates(latitude, longitude)
     }
 
