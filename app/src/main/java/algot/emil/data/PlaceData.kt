@@ -1,4 +1,4 @@
-package algot.emil.api
+package algot.emil.data
 
 data class PlaceData (
     val display_name: String,
