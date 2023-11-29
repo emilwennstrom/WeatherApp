@@ -10,6 +10,8 @@ import algot.emil.persistence.WeatherHourly
 import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
+import android.util.Log
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
@@ -19,9 +21,11 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 
+private const val TAG = "WeatherVM"
 
 interface WeatherViewModel
 
@@ -31,14 +35,11 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
 
     private val connectivity = application.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val persistenceContext = application as PersistenceContext
+
     private val weatherModel: WeatherModel =
         WeatherModel(persistenceContext, connectivity) // Skapa en instans av WeatherModel
 
     private val _name = MutableStateFlow("Algot")
-
-    val allWeather: Flow<List<Weather>> = weatherModel.allWeather
-    val allWeatherHourly: Flow<List<WeatherHourly>> = weatherModel.allWeatherHourly
-
 
     private val _dayOfWeek = MutableStateFlow<Weather?>(null)
     val dayOfWeek: StateFlow<Weather?> = _dayOfWeek.asStateFlow()
@@ -59,6 +60,12 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         )
 
     )
+
+    private val _allWeatherHourly = MutableStateFlow(emptyList<WeatherHourly>())
+    val allWeatherHourly = _allWeatherHourly.asStateFlow()
+
+    private val _allWeather = MutableStateFlow(emptyList<Weather>())
+    val allWeather = _allWeather.asStateFlow()
 
     private val _places = MutableStateFlow(somePlaceData)
     val places = _places.asStateFlow()
@@ -88,7 +95,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     val temperatureUnit: StateFlow<String>
         get() = _temperatureUnit
 
-    fun getWeatherNextSevenDays() {
+    /*fun getWeatherNextSevenDays() {
         viewModelScope.launch { // launching a new coroutine
             if (weatherModel.fetchWeatherNextSevenDays()) {
                 if (weatherModel.weatherDisplay != null) {
@@ -100,24 +107,52 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                 _isLoading.value = false
             }
         }
-    }
+    }*/
 
-    fun getWeatherHourly() {
+   /* fun getWeatherHourly() {
         viewModelScope.launch { // launching a new coroutine
             if (weatherModel.fetchWeatherNextHours()) {
                 //TODO: implement
             }
         }
+    }*/
+
+    suspend fun getWeatherFromDb() {
+        viewModelScope.launch {
+            launch {
+                weatherModel.allWeather.collect {
+                        wList -> _allWeather.value = wList
+                }
+            }
+            launch {
+                weatherModel.allWeatherHourly.collect() {
+                        wList -> _allWeatherHourly.value = wList
+                }
+            }
+        }
+    }
+
+    fun updateWeatherFromQuery(placeData: PlaceData) {
+        viewModelScope.launch {
+            val success = weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
+            if (success.first && success.second) {
+                _dailyWeather.value = weatherModel.weatherDisplay!!
+                _temperatureUnit.value = weatherModel.temperatureUnit!!
+            }
+        }
+        _isLoading.value = false
+        Log.d(TAG, placeData.display_name)
     }
 
     fun onSearchTextChanged(query: String) {
         _searchQuery.value = query
         viewModelScope.launch {
+            delay(1000)
             if (query.isNotEmpty()) {
                 weatherModel.searchPlaces(query).collect { placeList ->
                     _places.value = placeList
                 }
-                delay(1000)
+
             }
 
         }
@@ -128,6 +163,27 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
             weatherModel.getWeather(dayOfWeek.toLong()).collect { weather ->
                 _dayOfWeek.value = weather
             }
+        }
+
+    }
+
+    init {
+
+        viewModelScope.launch {
+            launch {
+                weatherModel.allWeather.collect {
+                        wList -> _allWeather.value = wList
+                }
+            }
+            launch {
+                weatherModel.allWeatherHourly.collect() {
+                        wList -> _allWeatherHourly.value = wList
+                }
+            }
+        }
+
+        for (element in _allWeather.value){
+            Log.d(TAG, element.weatherState.toString())
         }
 
     }

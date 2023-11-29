@@ -1,6 +1,5 @@
 package algot.emil.api
 
-import android.util.Log
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -40,42 +39,19 @@ object WeatherApi {
     private val geoInstance = Retrofit.geoCodeInstance.create(GeocodeApi::class.java)
     private val meteoInstance = Retrofit.meteoInstance.create(MeteoApi::class.java)
 
-
-
     suspend fun getDailyWeatherForSevenDays(
         latitude: Float, longitude: Float
     ): Response<WeatherData> {
-
-        val data = geoInstance.getCoordinatesAndDisplayName("Repslagaregatan 5b Nyköping")
-        Log.d("TAG", data.body().toString())
-        val firstData = data.body()?.get(0)
-
-        val lat = firstData?.lat?.toFloat()
-        val long = firstData?.lon?.toFloat()
-
-
-        //val meteoInstance = Retrofit.meteoInstance.create(MeteoApi::class.java)
-        if (lat != null && long != null) return meteoInstance.getDailyWeatherForSevenDaysByCoordinates(
-            lat,
-            long
-        )
-        else throw Exception()
-
+        return meteoInstance.getDailyWeatherForSevenDaysByCoordinates(latitude, longitude)
     }
 
     suspend fun getHourlyWeatherForTwoDays(
         latitude: Float, longitude: Float
     ): Response<HourlyWeatherData> {
-
-        //val geoInstance = Retrofit.geoCodeInstance.create(GeocodeApi::class.java)
-
-
-        //val meteoInstance = Retrofit.meteoInstance.create(MeteoApi::class.java)
         return meteoInstance.getHourlyWeatherByDaysAndByCoordinates(latitude, longitude)
-
     }
 
-    suspend fun searchPlaces(query: String) : Response<List<PlaceData>> {
+    suspend fun searchPlaces(query: String): Response<List<PlaceData>> {
         return geoInstance.getCoordinatesAndDisplayName(query)
     }
 

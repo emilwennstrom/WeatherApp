@@ -18,94 +18,89 @@ import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class WeatherModel(persistenceContext: PersistenceContext,  connectivity: ConnectivityManager) {
+class WeatherModel(persistenceContext: PersistenceContext, connectivity: ConnectivityManager) {
     private val weatherDao = persistenceContext.weatherDao
     val allWeather = weatherDao.getAll()
     private val weatherHourlyDao = persistenceContext.weatherHourlyDao
     val allWeatherHourly = weatherHourlyDao.getAll()
     private val connectivityManager = connectivity
 
-    var weatherDisplay: List<DailyWeatherDisplay> ?= null
-    var displayUnit: DailyUnits?= null
-    var temperatureUnit: String?="C"
+    var weatherDisplay: List<DailyWeatherDisplay>? = null
+    var displayUnit: DailyUnits? = null
+    var temperatureUnit: String? = "C"
 
 
-    var weatherHourlyDisplay: List<HourlyDataDisplay> ?= null
-    var hourlyUnits: HourlyUnits ?=null
+    var weatherHourlyDisplay: List<HourlyDataDisplay>? = null
+    var hourlyUnits: HourlyUnits? = null
 
-    /**
-     * returns true if successfully fetched weather from API or from database (if no internet connection)
-     */
-    suspend fun fetchWeatherNextSevenDays(): Boolean {
-        if(isNetworkAvailable()){
-            val city = "Stockholm"
-            Log.d("GetWeatherResults: ", "starting API call")
-            val result = WeatherApi.getDailyWeatherForSevenDays( 52.52F, 13.41F)
-            // Checking the results
-            Log.d("GetWeatherResults: ", result.body().toString())
-            if (result.isSuccessful && result.body() != null) {
-                val resultBody = result.body()!!  // Extract WeatherData from the response
-                weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
-                Log.d("GetWeatherResults:", "list of result converted: "+ weatherDisplay.toString())
-                displayUnit = WeatherConverter().getDailyUnits(resultBody)
-                Log.d("GetWeatherResults:", "daily units: "+ displayUnit.toString())
-                temperatureUnit = displayUnit!!.temperature_2m_max
-                replaceWeatherDataInDb()
-                return true
-            }
-            Log.d("GetWeatherResults: ", result.body().toString())
-            return false
-        }else{
-            Log.d("GetWeatherResults", "retreiving DailyWeather from database as user has no internet connection")
-            weatherDao.getAll()
+    private suspend fun fetchWeatherNextSevenDays(lat: Float, lon: Float): Boolean {
+        Log.d("GetWeatherResults: ", "starting API call")
+        val result = WeatherApi.getDailyWeatherForSevenDays(lat, lon)
+        // Checking the results
+        Log.d("GetWeatherResults: ", result.body().toString())
+        if (result.isSuccessful && result.body() != null) {
+            val resultBody = result.body()!!  // Extract WeatherData from the response
+            weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
+            Log.d("GetWeatherResults:", "list of result converted: " + weatherDisplay.toString())
+            displayUnit = WeatherConverter().getDailyUnits(resultBody)
+            Log.d("GetWeatherResults:", "daily units: " + displayUnit.toString())
+            temperatureUnit = displayUnit!!.temperature_2m_max
+
+            replaceWeatherDataInDb()
+
+
             return true
         }
+        return false
 
     }
 
-
-    suspend fun fetchWeatherNextHours(): Boolean {
-        if(isNetworkAvailable()) {
-            val city = "Stockholm"
-            Log.d("GetWeatherResultsHourly: ", "starting API call")
-            val result = WeatherApi.getHourlyWeatherForTwoDays(52.52F, 13.41F)
-            Log.d("GetWeatherResultsHourly: ", result.body().toString())  // Checking the results
-            if (result.isSuccessful && result.body() != null) {
-                val resultBody = result.body()!!  // Extract WeatherData from the response
-                weatherHourlyDisplay = WeatherConverter().getHourlyWeatherDisplay(resultBody)
-                Log.d(
-                    "GetWeatherResultsHourly:",
-                    "list of result converted: " + weatherHourlyDisplay.toString()
-                )
-                hourlyUnits = WeatherConverter().getHourlyUnits(resultBody)
-                Log.d("GetWeatherResultsHourly:", "daily units: " + hourlyUnits.toString())
-                //temperatureUnit = hourlyUnits!!.temperature_2m_max
-
-                replaceHourlyWeatherDataInDb()
-                return true
-            }
-            Log.d("GetWeatherResultsHourly: ", "error: " + result.body().toString())
-            return false
-        }else{
-            Log.d("GetWeatherResultsHourly", "retreiving HourlyWeather from database as user has no internet connection")
-            weatherHourlyDao.getAll()
+    private suspend fun fetchWeatherNextHours(lat: Float, lon: Float): Boolean {
+        Log.d("GetWeatherResultsHourly: ", "starting API call")
+        val result = WeatherApi.getHourlyWeatherForTwoDays(lat, lon)
+        Log.d("GetWeatherResultsHourly: ", result.body().toString())  // Checking the results
+        if (result.isSuccessful && result.body() != null) {
+            val resultBody = result.body()!!  // Extract WeatherData from the response
+            weatherHourlyDisplay = WeatherConverter().getHourlyWeatherDisplay(resultBody)
+            Log.d(
+                "GetWeatherResultsHourly:",
+                "list of result converted: " + weatherHourlyDisplay.toString()
+            )
+            hourlyUnits = WeatherConverter().getHourlyUnits(resultBody)
+            Log.d("GetWeatherResultsHourly:", "daily units: " + hourlyUnits.toString())
+            //temperatureUnit = hourlyUnits!!.temperature_2m_max
             return true
         }
+        return false
+    }
+
+    suspend fun fetchWeatherData(lat: Float, lon: Float): Pair<Boolean, Boolean> {
+        Log.d("MODEL", "FETCHING")
+        val isSevenDayFetched = fetchWeatherNextSevenDays(lat, lon)
+        val isNextHoursFetched = fetchWeatherNextHours(lat, lon)
+        return Pair(isSevenDayFetched, isNextHoursFetched)
     }
 
 
     private suspend fun replaceWeatherDataInDb() {
         weatherDao.deleteAll()
-        var dayNumber = 1L;
+        var dayNumber = 1L
         for (weather in weatherDisplay!!) {
-            weatherDao.insert(weather = Weather(id = dayNumber++, time = weather.time, weatherState = weather.weather_State_code, temperature = weather.temperature_2m_max))
+            weatherDao.insert(
+                weather = Weather(
+                    id = dayNumber++,
+                    time = weather.time,
+                    weatherState = weather.weather_State_code,
+                    temperature = weather.temperature_2m_max
+                )
+            )
         }
     }
 
     private suspend fun replaceHourlyWeatherDataInDb() {
         weatherHourlyDao.deleteAll()
 
-        var dayNumber = 1L;
+        var dayNumber = 1L
         for (weather in weatherHourlyDisplay!!) {
             val weatherHourly = WeatherHourly(
                 id = dayNumber++,
@@ -121,7 +116,7 @@ class WeatherModel(persistenceContext: PersistenceContext,  connectivity: Connec
         }
     }
 
-    suspend fun insert(weather: Weather){
+    suspend fun insert(weather: Weather) {
         Log.d("TAG", weather.time)
         weatherDao.insert(weather)
     }
@@ -129,44 +124,40 @@ class WeatherModel(persistenceContext: PersistenceContext,  connectivity: Connec
     fun getWeather(id: Long): Flow<Weather> = weatherDao.get(id)
     suspend fun searchPlaces(query: String): Flow<List<PlaceData>> = flow {
         val result = mutableListOf<PlaceData>()
-        val response = WeatherApi.searchPlaces(query) // fetches data from API
+        val response = WeatherApi.searchPlaces(query)
         if (response.isSuccessful) {
             response.body()?.let { places ->
                 result.addAll(places)
             }
         }
-        emit(result) // Emit the result as a Flow
+        emit(result)
     }
 
-    fun isNetworkAvailable():Boolean {
-        val network = connectivityManager?.activeNetwork
-        val capabilities = connectivityManager?.getNetworkCapabilities(network)
-        if(capabilities != null &&
-            (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))){
-            return true
-        }else{
-            return false
-        }
+    fun isNetworkAvailable(): Boolean {
+        val network = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(
+            NetworkCapabilities.TRANSPORT_CELLULAR
+        ))
     }
 
     /**
      * optional. isnt used
      */
     fun isInternetAvailable(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val network = connectivityManager.activeNetwork ?: return false
             val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(
+                NetworkCapabilities.TRANSPORT_CELLULAR
+            ) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
         } else {
             val networkInfo = connectivityManager.activeNetworkInfo ?: return false
             return networkInfo.isConnected
         }
     }
-
-
-
 
 
 }

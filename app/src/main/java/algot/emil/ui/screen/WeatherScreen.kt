@@ -3,6 +3,8 @@ package algot.emil.ui.screen
 import algot.emil.R
 import algot.emil.ui.viewmodel.WeatherVM
 import android.content.res.Configuration
+import android.os.Debug
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -80,8 +82,7 @@ private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
 
 
     LaunchedEffect(Unit) {
-        vm.getWeatherNextSevenDays()
-        vm.getWeatherHourly()
+        vm.getWeatherFromDb()
     }
 
     Column(
@@ -89,7 +90,7 @@ private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
             .background(color = MaterialTheme.colorScheme.background)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Bottom
+        verticalArrangement = Arrangement.Top
     ) {
 
         Row {
@@ -126,7 +127,8 @@ private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
                                 modifier = modifier
                                     .fillMaxSize()
                                     .padding(2.dp)
-                                    .height(50.dp)
+                                    .height(50.dp),
+                                onClick = {vm.updateWeatherFromQuery(value)}
                             ) {
                                 Row(
                                     modifier = modifier
@@ -195,7 +197,7 @@ private fun LandscapeScreen(vm: WeatherVM, padding: Modifier) {
 
 @Composable
 private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
-    val allWeather by vm.allWeatherHourly.collectAsState(initial = listOf())
+    val allWeather by vm.allWeatherHourly.collectAsState()
     val temperatureUnit by vm.temperatureUnit.collectAsState()
 
     LazyColumn {
@@ -234,7 +236,7 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
 
 @Composable
 private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
-    val allWeather by vm.allWeather.collectAsState(initial = listOf())
+    val allWeather by vm.allWeather.collectAsState()
     val temperatureUnit by vm.temperatureUnit.collectAsState()
 
     LazyColumn {
