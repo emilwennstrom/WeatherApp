@@ -34,45 +34,57 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
     var hourlyUnits: HourlyUnits? = null
 
     private suspend fun fetchWeatherNextSevenDays(lat: Float, lon: Float): Boolean {
-        Log.d("GetWeatherResults: ", "starting API call")
-        val result = WeatherApi.getDailyWeatherForSevenDays(lat, lon)
-        // Checking the results
-        Log.d("GetWeatherResults: ", result.body().toString())
-        if (result.isSuccessful && result.body() != null) {
-            val resultBody = result.body()!!  // Extract WeatherData from the response
-            weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
-            Log.d("GetWeatherResults:", "list of result converted: " + weatherDisplay.toString())
-            displayUnit = WeatherConverter().getDailyUnits(resultBody)
-            Log.d("GetWeatherResults:", "daily units: " + displayUnit.toString())
-            temperatureUnit = displayUnit!!.temperature_2m_max
+        if(isNetworkAvailable()){
+            Log.d("GetWeatherResults: ", "starting API call")
+            val result = WeatherApi.getDailyWeatherForSevenDays(lat, lon)
+            // Checking the results
+            Log.d("GetWeatherResults: ", result.body().toString())
+            if (result.isSuccessful && result.body() != null) {
+                val resultBody = result.body()!!  // Extract WeatherData from the response
+                weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
+                Log.d("GetWeatherResults:", "list of result converted: " + weatherDisplay.toString())
+                displayUnit = WeatherConverter().getDailyUnits(resultBody)
+                Log.d("GetWeatherResults:", "daily units: " + displayUnit.toString())
+                temperatureUnit = displayUnit!!.temperature_2m_max
 
-            replaceWeatherDataInDb()
+                replaceWeatherDataInDb()
 
 
+                return true
+            }
+            return false
+        }else{
+            weatherDao.getAll()
             return true
         }
-        return false
+
 
     }
 
     private suspend fun fetchWeatherNextHours(lat: Float, lon: Float): Boolean {
-        Log.d("GetWeatherResultsHourly: ", "starting API call")
-        val result = WeatherApi.getHourlyWeatherForTwoDays(lat, lon)
-        Log.d("GetWeatherResultsHourly: ", result.body().toString())  // Checking the results
-        if (result.isSuccessful && result.body() != null) {
-            val resultBody = result.body()!!  // Extract WeatherData from the response
-            weatherHourlyDisplay = WeatherConverter().getHourlyWeatherDisplay(resultBody)
-            Log.d(
-                "GetWeatherResultsHourly:",
-                "list of result converted: " + weatherHourlyDisplay.toString()
-            )
-            hourlyUnits = WeatherConverter().getHourlyUnits(resultBody)
-            Log.d("GetWeatherResultsHourly:", "daily units: " + hourlyUnits.toString())
-            //temperatureUnit = hourlyUnits!!.temperature_2m_max
-            replaceHourlyWeatherDataInDb()
+        if(isNetworkAvailable()){
+            Log.d("GetWeatherResultsHourly: ", "starting API call")
+            val result = WeatherApi.getHourlyWeatherForTwoDays(lat, lon)
+            Log.d("GetWeatherResultsHourly: ", result.body().toString())  // Checking the results
+            if (result.isSuccessful && result.body() != null) {
+                val resultBody = result.body()!!  // Extract WeatherData from the response
+                weatherHourlyDisplay = WeatherConverter().getHourlyWeatherDisplay(resultBody)
+                Log.d(
+                    "GetWeatherResultsHourly:",
+                    "list of result converted: " + weatherHourlyDisplay.toString()
+                )
+                hourlyUnits = WeatherConverter().getHourlyUnits(resultBody)
+                Log.d("GetWeatherResultsHourly:", "daily units: " + hourlyUnits.toString())
+                //temperatureUnit = hourlyUnits!!.temperature_2m_max
+                replaceHourlyWeatherDataInDb()
+                return true
+            }
+            return false
+        }else{
+            weatherHourlyDao.getAll()
             return true
         }
-        return false
+
     }
 
     suspend fun fetchWeatherData(lat: Float, lon: Float): Pair<Boolean, Boolean> {
