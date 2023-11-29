@@ -18,6 +18,7 @@ import android.util.Log
 import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 
 class WeatherModel(persistenceContext: PersistenceContext, connectivity: ConnectivityManager) {
@@ -25,6 +26,8 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
     val allWeather = weatherDao.getAll()
     private val weatherHourlyDao = persistenceContext.weatherHourlyDao
     val allWeatherHourly = weatherHourlyDao.getAll()
+    var allWeatherHourlyFromTime:  Flow<List<WeatherHourly>> = emptyFlow()
+
     private val connectivityManager = connectivity
 
     var weatherDisplay: List<DailyWeatherDisplay>? = null
@@ -34,6 +37,10 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
 
     var weatherHourlyDisplay: List<HourlyDataDisplay>? = null
     var hourlyUnits: HourlyUnits? = null
+
+    public suspend fun getAllWeatherHourlyFromTime(time: String) {
+        allWeatherHourlyFromTime = weatherHourlyDao.getAllAfter(time)
+    }
 
     private suspend fun fetchWeatherNextSevenDays(lat: Float, lon: Float): Boolean {
         if(isNetworkAvailable()){

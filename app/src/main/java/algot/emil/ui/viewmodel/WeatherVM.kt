@@ -119,8 +119,11 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                 }
             }
             launch {
-                weatherModel.allWeatherHourly.collectLatest {
-                        wList -> _allWeatherHourly.value = wList
+                Log.d("getWeatherFromDb", "date:" + getCurrentDateTimeFormatted())
+                weatherModel.getAllWeatherHourlyFromTime(getCurrentDateTimeFormatted())
+                weatherModel.allWeatherHourlyFromTime.collect {
+                        wList ->
+                    _allWeatherHourly.value = wList // setting the list
                 }
             }
         }
@@ -168,6 +171,12 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
             }
         }
 
+    }
+
+    fun getCurrentDateTimeFormatted(): String {
+        val calendar = Calendar.getInstance()
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
+        return format.format(calendar.time)
     }
 
     override fun convertDateToWeekday(dateStr: String): String {
