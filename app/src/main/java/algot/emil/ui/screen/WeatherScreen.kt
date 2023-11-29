@@ -249,7 +249,7 @@ private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = weather.time + " ", style = MaterialTheme.typography.bodyMedium
+                        text = vm.convertDateToWeekday(weather.time ) + " ", style = MaterialTheme.typography.bodyMedium
                     )
                     weatherImage(vm = vm, weatherState = weather.weatherState.toString())
                     Text(
