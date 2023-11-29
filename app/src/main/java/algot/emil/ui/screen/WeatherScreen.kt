@@ -225,22 +225,27 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
                             text = "${weather.temperature} °C ",
                             style = MaterialTheme.typography.bodyMedium
                         )
+                        Row{
+                            windImage(vm = vm, degrees =weather.windDirection)
+                            Text(
+                                text = "${weather.windSpeed} km/h",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+
                     }
-                    Text(
-                        text = "rel. humidity: ${weather.relativeHumidity} % ",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = "Precip. prob.: ${weather.precipitationProbability} %",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Row{
-                        windImage(vm = vm, degrees =weather.windDirection)
+                    Column{
                         Text(
-                            text = "${weather.windSpeed} km/h",
+                            text = "rel. humidity: ${weather.relativeHumidity} % ",
                             style = MaterialTheme.typography.bodyMedium
                         )
+                        Text(
+                            text = "Precip. prob.: ${weather.precipitationProbability} %",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
                     }
+
 
                 }
             }
