@@ -169,9 +169,11 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                 _dayOfWeek.value = weather
             }
         }
-
     }
 
+    fun updateHourly(time: String){
+
+    }
 
 
     override fun convertDateToWeekday(dateStr: String): String {

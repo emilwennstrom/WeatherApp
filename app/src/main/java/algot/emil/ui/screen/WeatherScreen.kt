@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -210,6 +212,7 @@ private fun ListHourly(hourlyWeather: List<WeatherHourly>, modifier: Modifier = 
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ListSevenDays(
     sevenDayWeather: List<Weather>,
@@ -224,6 +227,9 @@ private fun ListSevenDays(
                     .fillMaxHeight()
                     .padding(2.dp)
                     .aspectRatio(1f / 1f),
+                onClick = {
+                    vm.updateHourly(weather.time)
+                }
             ) {
                 Column(
                     modifier = Modifier
