@@ -163,16 +163,21 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         }
     }
 
-    fun loadDayOfWeek(dayOfWeek: Int) {
-        viewModelScope.launch {
-            weatherModel.getWeather(dayOfWeek.toLong()).collect { weather ->
-                _dayOfWeek.value = weather
-            }
-        }
-    }
-
+    //TODO: anropa placeRepository.get() för att få longitud och latitud.
+    //TODO: Sedan anropa eatherModel.fetchWeatherNextHoursWithStartDate med longitud, latitud och reformatedTime
+    //TODO: då borde hourly uppdateras för den dag man klickar på.
     fun updateHourly(time: String){
-
+        var reformatedTime = weatherModel.reformatDate(time)
+        //placeRepository.get()
+        //weatherModel.fetchWeatherNextHoursWithStartDate(reformatedTime)
+        //weatherModel.allWeatherHourlyFromTime(reformatedTime)
+        //launch {
+        //    weatherModel.allWeatherHourlyFromTime(reformatedTime)
+        //    weatherModel.allWeatherHourlyFromTime.collect {
+        //            wList ->
+        //        _allWeatherHourly.value = wList // setting the list
+        //    }
+        //}
     }
 
 

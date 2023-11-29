@@ -94,8 +94,6 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
             weatherDao.getAll()
             return true
         }
-
-
     }
 
     fun addOneDay(dateStr: String): String {
@@ -107,6 +105,20 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         return format.format(calendar.time)
     }
 
+
+    /**
+     * Usage example:
+     * val reformattedDate = reformatDate("2023-11-30T14:00") // Returns "2023-11-30"
+     *
+     */
+    fun reformatDate(dateStr: String): String {
+        return dateStr.split("T")[0]
+    }
+
+
+    /**
+     * Note: format for startDate is "2023-11-30"
+     */
     private suspend fun fetchWeatherNextHoursWithStartDate(lat: Float, lon: Float, startDate:String): Boolean {
         if(isNetworkAvailable()){
             Log.d("GetWeatherResultsHourly: ", "starting API call")
@@ -188,11 +200,6 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         }
     }
 
-    suspend fun insert(weather: Weather) {
-        Log.d("TAG", weather.time)
-        weatherDao.insert(weather)
-    }
-
     fun getWeather(id: Long): Flow<Weather> = weatherDao.get(id)
     suspend fun searchPlaces(query: String): Flow<List<PlaceData>> = flow {
         val result = mutableListOf<PlaceData>()
@@ -212,24 +219,4 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
             NetworkCapabilities.TRANSPORT_CELLULAR
         ))
     }
-
-    /**
-     * optional. isnt used
-     */
-    fun isInternetAvailable(context: Context): Boolean {
-        val connectivityManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val network = connectivityManager.activeNetwork ?: return false
-            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(
-                NetworkCapabilities.TRANSPORT_CELLULAR
-            ) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
-        } else {
-            val networkInfo = connectivityManager.activeNetworkInfo ?: return false
-            return networkInfo.isConnected
-        }
-    }
-
-
 }
