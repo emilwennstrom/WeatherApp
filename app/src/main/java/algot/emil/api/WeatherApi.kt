@@ -23,6 +23,16 @@ private interface MeteoApi {
         @Query("forecast_days") days: Int = 2
     ): Response<HourlyWeatherData>
 
+    @GET("v1/forecast")
+    suspend fun getHourlyWeatherByDaysAndByCoordinatesAndStartAndEndDate(
+        @Query("latitude") latitude: Float,
+        @Query("longitude") longitude: Float,
+        @Query("hourly") daily: String = "temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m",
+        @Query("start_date") startDate: String, //format: 2023-11-30
+        @Query("end_date") endDate: String //format: 2023-11-31
+    ): Response<HourlyWeatherData>
+
+
 
 }
 
@@ -51,6 +61,15 @@ object WeatherApi {
         latitude: Float, longitude: Float
     ): Response<HourlyWeatherData> {
         return meteoInstance.getHourlyWeatherByDaysAndByCoordinates(latitude, longitude)
+    }
+
+    /**
+     * Time interval should be in format:  "2023-11-31"
+     */
+    suspend fun getHourlyWeatherWithTimeInterval(
+        latitude: Float, longitude: Float, startDate:String, endDate: String
+    ): Response<HourlyWeatherData> {
+        return meteoInstance.getHourlyWeatherByDaysAndByCoordinatesAndStartAndEndDate(latitude, longitude, startDate=startDate,endDate=endDate)
     }
 
     suspend fun searchPlaces(query: String): Response<List<PlaceData>> {
