@@ -33,8 +33,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,7 +40,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -55,7 +52,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
-
 
 
     val configuration = LocalConfiguration.current
@@ -79,18 +75,20 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PortraitScreen(scope: CoroutineScope, snackbarHostState: SnackbarHostState, vm: WeatherVM, modifier: Modifier) {
+private fun PortraitScreen(
+    scope: CoroutineScope,
+    snackbarHostState: SnackbarHostState,
+    vm: WeatherVM,
+    modifier: Modifier
+) {
     val isLoading by vm.isLoading.collectAsState()
-    val searchQuery by vm.searchQuery.collectAsState()
     val places by vm.places.collectAsState()
-    val isSearching by vm.isSearching.collectAsState()
     val topBarState by vm.topBarState.collectAsState()
+    val currentPlace by vm.currentPlace.collectAsState()
+    val sevenDayWeather by vm.allWeather.collectAsState()
 
 
 
-
-
-    
     Column(
         modifier = Modifier
             .background(color = MaterialTheme.colorScheme.background)
@@ -100,17 +98,30 @@ private fun PortraitScreen(scope: CoroutineScope, snackbarHostState: SnackbarHos
     ) {
 
         Row {
-            TopBar(topBarState = topBarState, onSearch = vm::onSearchTextChanged, showSearch = vm::showSearch, isConnected = vm::getConnectivity, showSnackBar = { message, duration ->
-                showSnackbar(
-                    scope,
-                    snackbarHostState,
-                    message,
-                    duration
-                )
-            }, resetTextField = vm::updateTextField)
+
+            var icon = R.drawable.sunny
+            if (sevenDayWeather.isNotEmpty()){
+                icon = getPictureName(sevenDayWeather[0].weatherState.toString())
+            }
+
+            TopBar(
+                topBarState = topBarState,
+                currentPlace = currentPlace,
+                onSearch = vm::onSearchTextChanged,
+                showSearch = vm::showSearch,
+                isConnected = vm::getConnectivity,
+                showSnackBar = { message, duration ->
+                    showSnackbar(
+                        scope, snackbarHostState, message, duration
+                    )
+                },
+                resetTextField = vm::updateTopBarTextField,
+                weatherIcon = icon
+            )
+
         }
 
-        if (topBarState.searchText.isNotEmpty()) {
+        if (topBarState.searchText.isNotEmpty() && topBarState.isSearchShown) {
             Row(modifier.weight(1.2f)) {
                 SearchResultScreen(modifier = Modifier, places, vm::updateWeatherFromQuery)
             }
@@ -119,50 +130,31 @@ private fun PortraitScreen(scope: CoroutineScope, snackbarHostState: SnackbarHos
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
         if (!isLoading) {
 
-            Row(modifier = Modifier
-                .weight(0.2f)
-                .fillMaxSize()) {
+            Row(
+                modifier = Modifier
+                    .weight(0.2f)
+                    .fillMaxSize()
+            ) {
                 ListSevenDays(vm = vm)
             }
             Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
-            Row(modifier = Modifier
-                .weight(0.8f)
-                .fillMaxSize()) {
-                ListHourly(vm=vm)
+            Row(
+                modifier = Modifier
+                    .weight(0.8f)
+                    .fillMaxSize()
+            ) {
+                ListHourly(vm = vm)
             }
         }
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
     }
 }
 
-@ExperimentalMaterial3Api
-@Composable
-fun SearchBar(
-    modifier: Modifier = Modifier,
-    onSearch: (String) -> Unit,
-    searchText: String
-) {
-    TextField(
-        value = searchText,
-        onValueChange = onSearch, //onValueChange = onSearch,
-        keyboardActions = KeyboardActions(
-            onDone = {onSearch(searchText)}
-        ),
-        singleLine = true,
-        placeholder = { Text("Enter place") },
-        label = { Text("Search") },
-        modifier = Modifier.fillMaxWidth(),
-        colors = TextFieldDefaults.textFieldColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            textColor = MaterialTheme.colorScheme.onPrimaryContainer
-        ),
-        shape = RectangleShape
-    )
-}
+
 
 
 @Composable
-private fun LandscapeScreen(vm: WeatherVM, padding: Modifier) {
+private fun LandscapeScreen(vm: WeatherVM, modifier: Modifier) {
     //Greeting(name = "horisonetelll ")
 }
 
@@ -172,7 +164,7 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
     val allWeather by vm.allWeatherHourly.collectAsState()
     val temperatureUnit by vm.temperatureUnit.collectAsState()
 
-    LazyColumn (){
+    LazyColumn {
         items(allWeather) { weather ->
             Card(
                 modifier = Modifier
@@ -187,19 +179,20 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = weather.time.takeLast(5) + " ", style = MaterialTheme.typography.bodyMedium
+                        text = weather.time.takeLast(5) + " ",
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     //Spacer(modifier = Modifier.width(8.dp))
-                    weatherImage(vm = vm, weatherState = weather.weatherState.toString())
+                    weatherImage(weatherState = weather.weatherState.toString())
                     //Spacer(modifier = Modifier.width(8.dp))
 
-                    Column{
+                    Column {
                         Text(
                             text = "${weather.temperature} °C ",
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        Row{
-                            windImage(vm = vm, degrees =weather.windDirection)
+                        Row {
+                            windImage(vm = vm, degrees = weather.windDirection)
                             Text(
                                 text = "${weather.windSpeed} km/h",
                                 style = MaterialTheme.typography.bodyMedium
@@ -207,7 +200,7 @@ private fun ListHourly(vm: WeatherVM, modifier: Modifier = Modifier) {
                         }
 
                     }
-                    Column{
+                    Column {
                         Text(
                             text = "rel. humidity: ${weather.relativeHumidity} % ",
                             style = MaterialTheme.typography.bodyMedium
@@ -251,9 +244,10 @@ private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
 
                 ) {
                     Text(
-                        text = vm.convertDateToWeekday(weather.time ) + " ", style = MaterialTheme.typography.bodyMedium
+                        text = vm.convertDateToWeekday(weather.time) + " ",
+                        style = MaterialTheme.typography.bodyMedium
                     )
-                    weatherImage(vm = vm, weatherState = weather.weatherState.toString())
+                    weatherImage(weatherState = weather.weatherState.toString())
                     Text(
                         text = "${weather.temperature} °C",
                         style = MaterialTheme.typography.bodyMedium
@@ -268,21 +262,19 @@ private fun ListSevenDays(vm: WeatherVM, modifier: Modifier = Modifier) {
 private fun windImage(vm: WeatherVM, degrees: Int) {
     Box(
         modifier = Modifier,
-            //.height(48.dp),
+        //.height(48.dp),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(R.drawable.arrow),
+        Image(painter = painterResource(R.drawable.arrow),
             contentDescription = "degrees: $degrees°",
             modifier = Modifier.graphicsLayer {
                 rotationZ = degrees.toFloat() // Rotate in z-direction
-            }
-        )
+            })
     }
 }
 
 @Composable
-private fun weatherImage(vm: WeatherVM, weatherState: String) {
+private fun weatherImage(weatherState: String) {
     Box(
         modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center
     ) {
@@ -363,9 +355,7 @@ private fun showSnackbar(
 ) {
     scope.launch {
         snackbarHostState.showSnackbar(
-            message = message,
-            actionLabel = "Close",
-            duration = duration
+            message = message, actionLabel = "Close", duration = duration
         )
     }
 }

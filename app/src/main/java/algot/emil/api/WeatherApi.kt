@@ -1,5 +1,6 @@
 package algot.emil.api
 
+import algot.emil.data.PlaceData
 import android.util.Log
 import retrofit2.Response
 import retrofit2.http.GET

@@ -5,7 +5,7 @@ import algot.emil.api.DailyUnits
 import algot.emil.api.DailyWeatherDisplay
 import algot.emil.api.HourlyDataDisplay
 import algot.emil.api.HourlyUnits
-import algot.emil.api.PlaceData
+import algot.emil.data.PlaceData
 import algot.emil.api.WeatherApi
 import algot.emil.api.WeatherConverter
 import algot.emil.persistence.Weather
@@ -15,7 +15,6 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
-import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow

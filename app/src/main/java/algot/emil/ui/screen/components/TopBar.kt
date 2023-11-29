@@ -2,8 +2,6 @@ package algot.emil.ui.screen.components
 
 import algot.emil.R
 import algot.emil.data.TopBarProperties
-import algot.emil.ui.screen.SearchBar
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,7 +14,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import kotlin.reflect.KFunction0
+import androidx.compose.ui.text.style.TextOverflow
 
 private const val TAG = "TopBar"
 
@@ -25,12 +23,14 @@ private const val TAG = "TopBar"
 fun TopBar(
     modifier: Modifier = Modifier,
     topBarState: TopBarProperties,
+    currentPlace: String?,
     onSearch: (String) -> Unit,
     showSearch: () -> Unit,
     isConnected: () -> Boolean,
     showSnackBar: (String, SnackbarDuration) -> Unit,
-    resetTextField: (String) -> Unit
-    ) {
+    resetTextField: (String) -> Unit,
+    weatherIcon: Int
+) {
 
     CenterAlignedTopAppBar(
         modifier = modifier.fillMaxWidth(),
@@ -41,7 +41,9 @@ fun TopBar(
             if (!isConnected()){
                 showSnackBar("No connection", SnackbarDuration.Short)
             }
-            Text(text = "")
+            if (currentPlace != null) {
+                Text(text = currentPlace, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             resetTextField("")
         }},
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors (
@@ -51,7 +53,7 @@ fun TopBar(
             titleContentColor =  MaterialTheme.colorScheme.onPrimaryContainer,
             actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
-        navigationIcon = { Icon(painter = painterResource(id = R.drawable.sunny), contentDescription = null) },
+        navigationIcon = { Icon(painter = painterResource(id = weatherIcon), contentDescription = null) },
         actions = {
             IconButton(onClick = {
                 if (isConnected()) {

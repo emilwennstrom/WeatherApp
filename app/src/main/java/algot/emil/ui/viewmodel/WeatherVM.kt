@@ -2,9 +2,10 @@ package algot.emil.ui.viewmodel
 
 import algot.emil.PersistenceContext
 import algot.emil.api.DailyWeatherDisplay
-import algot.emil.api.PlaceData
+import algot.emil.data.PlaceData
 import algot.emil.data.TopBarProperties
 import algot.emil.enums.WeatherState
+import algot.emil.model.PlaceRepository
 import algot.emil.model.WeatherModel
 import algot.emil.persistence.Weather
 import algot.emil.persistence.WeatherHourly
@@ -12,20 +13,13 @@ import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.util.Log
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -47,6 +41,8 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private val weatherModel: WeatherModel =
         WeatherModel(persistenceContext, connectivity) // Skapa en instans av WeatherModel
 
+    private val placeRepository: PlaceRepository = PlaceRepository(persistenceContext.placeDao)
+
     private val _name = MutableStateFlow("Algot")
 
     private val _dayOfWeek = MutableStateFlow<Weather?>(null)
@@ -57,6 +53,9 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
 
     private val _topBarState = MutableStateFlow(TopBarProperties())
     val topBarState: StateFlow<TopBarProperties> = _topBarState.asStateFlow()
+
+    private val _currentPlace = MutableStateFlow("")
+    val currentPlace: StateFlow<String> = _currentPlace
 
 
 
@@ -109,6 +108,15 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     }
 
 
+    private fun getPlaceFromDb(){
+        viewModelScope.launch {
+            placeRepository.get().collect {
+                _currentPlace.value = it
+            }
+        }
+    }
+
+
 
     private fun getWeatherFromDb() {
         viewModelScope.launch {
@@ -135,18 +143,20 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                 val success = weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
                 if (success.first && success.second) {
                     _isLoading.value = false
+                    placeRepository.insert(placeData.display_name)
                 }
             }
-            updateTextField("")
+            updateTopBarTextField("")
+            _topBarState.value = topBarState.value.copy(isSearchShown = false)
         }
     }
 
-    fun updateTextField(text: String) {
+    fun updateTopBarTextField(text: String) {
         _topBarState.value = topBarState.value.copy(searchText = text)
     }
 
     fun onSearchTextChanged(query: String) {
-        updateTextField(query)
+        updateTopBarTextField(query)
         if (getConnectivity()) {
             viewModelScope.launch {
                 delay(1000)
@@ -189,6 +199,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     init {
 
         getWeatherFromDb()
+        getPlaceFromDb()
 
     }
 

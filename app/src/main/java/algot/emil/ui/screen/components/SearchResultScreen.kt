@@ -1,6 +1,6 @@
 package algot.emil.ui.screen.components
 
-import algot.emil.api.PlaceData
+import algot.emil.data.PlaceData
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +41,9 @@ fun SearchResultScreen(
                         .fillMaxSize()
                         .padding(2.dp)
                         .height(50.dp),
-                    onClick = {updateWeatherFromQuery(value)}
+                    onClick = {
+
+                        updateWeatherFromQuery(value)}
                 ) {
                     Row(
                         modifier = modifier
