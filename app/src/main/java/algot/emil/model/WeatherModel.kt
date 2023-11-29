@@ -42,9 +42,17 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
     var hourlyUnits: HourlyUnits? = null
 
     public suspend fun getAllWeatherHourlyFromTime() {
-        var time = getCurrentDateTimeFormatted()
+        var startTime= getCurrentDateTimeFormatted()
+        var endTime = getCurrentDateTimePlus24HoursFormatted()
         Log.d("WeatherModel", "date:" + getCurrentDateTimeFormatted())
-        allWeatherHourlyFromTime = weatherHourlyDao.getAllAfter(time)
+        allWeatherHourlyFromTime = weatherHourlyDao.getAllAfter(startTime, endTime)
+    }
+
+    fun getCurrentDateTimePlus24HoursFormatted():String{
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR,1)
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
+        return format.format(calendar.time)
     }
 
     /**
