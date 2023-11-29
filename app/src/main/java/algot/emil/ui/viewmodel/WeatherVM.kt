@@ -142,8 +142,6 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     }
 
     fun updateWeatherFromQuery(placeData: PlaceData) {
-        Log.d(TAG, "Lat: " + placeData.lat + " Lon: " + placeData.lon)
-
 
         viewModelScope.launch {
             val success = weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
@@ -151,6 +149,8 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                 _isLoading.value = false
             }
         }
+
+        _searchQuery.value = ""
 
         Log.d(TAG, placeData.display_name)
     }
