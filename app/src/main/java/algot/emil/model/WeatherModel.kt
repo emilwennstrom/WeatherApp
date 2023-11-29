@@ -20,6 +20,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class WeatherModel(persistenceContext: PersistenceContext, connectivity: ConnectivityManager) {
     private val weatherDao = persistenceContext.weatherDao
@@ -38,8 +41,22 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
     var weatherHourlyDisplay: List<HourlyDataDisplay>? = null
     var hourlyUnits: HourlyUnits? = null
 
-    public suspend fun getAllWeatherHourlyFromTime(time: String) {
+    public suspend fun getAllWeatherHourlyFromTime() {
+        var time = getCurrentDateTimeFormatted()
+        Log.d("WeatherModel", "date:" + getCurrentDateTimeFormatted())
         allWeatherHourlyFromTime = weatherHourlyDao.getAllAfter(time)
+    }
+
+    fun getCurrentDateTimeFormatted(): String {
+        val calendar = Calendar.getInstance()
+        // Check if the hour is 0 and set to 23, else decrease by 1
+        if (calendar.get(Calendar.HOUR_OF_DAY) == 0) {
+            calendar.set(Calendar.HOUR_OF_DAY, 23)
+        } else {
+            calendar.add(Calendar.HOUR_OF_DAY, -1)
+        }
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
+        return format.format(calendar.time)
     }
 
     private suspend fun fetchWeatherNextSevenDays(lat: Float, lon: Float): Boolean {
