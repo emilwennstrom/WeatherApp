@@ -24,8 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -74,8 +72,6 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PortraitScreen(
     scope: CoroutineScope,
@@ -134,7 +130,7 @@ private fun PortraitScreen(
                     .weight(0.2f)
                     .fillMaxSize()
             ) {
-                ListSevenDays(sevenDayWeather = sevenDayWeather, modifier = modifier, vm::convertDateToWeekday)
+                ListSevenDays(sevenDayWeather = sevenDayWeather,vm::convertDateToWeekday, vm::updateHourly)
             }
             Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
             Row(
@@ -216,8 +212,8 @@ private fun ListHourly(hourlyWeather: List<WeatherHourly>, modifier: Modifier = 
 @Composable
 private fun ListSevenDays(
     sevenDayWeather: List<Weather>,
-    modifier: Modifier = Modifier,
-    convertDateToWeekday: (String) -> String
+    convertDateToWeekday: (String) -> String,
+    updateHourly: (String) -> Unit
 ) {
 
     LazyRow {
@@ -228,7 +224,7 @@ private fun ListSevenDays(
                     .padding(2.dp)
                     .aspectRatio(1f / 1f),
                 onClick = {
-                    vm.updateHourly(weather.time)
+                    updateHourly(weather.time)
                 }
             ) {
                 Column(
