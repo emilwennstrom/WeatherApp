@@ -24,10 +24,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 private const val TAG = "WeatherVM"
 
-interface WeatherViewModel
+interface WeatherViewModel{
+    fun convertDateToWeekday(dateStr: String): String
+}
 
 
 class WeatherVM(application: Application) : AndroidViewModel(application = application),
@@ -167,25 +172,33 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
 
     }
 
+
     init {
 
         viewModelScope.launch {
             launch {
-                weatherModel.allWeather.collect {
-                        wList -> _allWeather.value = wList
+                weatherModel.allWeather.collect { wList ->
+                    _allWeather.value = wList
                 }
             }
             launch {
-                weatherModel.allWeatherHourly.collect() {
-                        wList -> _allWeatherHourly.value = wList
+                weatherModel.allWeatherHourly.collect() { wList ->
+                    _allWeatherHourly.value = wList
                 }
             }
         }
 
-        for (element in _allWeather.value){
+        for (element in _allWeather.value) {
             Log.d(TAG, element.weatherState.toString())
         }
 
+    }
+    override fun convertDateToWeekday(dateStr: String): String {
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = format.parse(dateStr)
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        return calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()) ?: ""
     }
 
 }
