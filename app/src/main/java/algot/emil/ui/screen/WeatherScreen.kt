@@ -1,10 +1,9 @@
 package algot.emil.ui.screen
 
 import algot.emil.R
+import algot.emil.ui.screen.components.TopBar
 import algot.emil.ui.viewmodel.WeatherVM
 import android.content.res.Configuration
-import android.os.Debug
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,51 +22,54 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Card
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 
+
+
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    Scaffold {
+    val scope = rememberCoroutineScope()
+    val snackBarHostState = remember { SnackbarHostState() }
+
+
+    Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) }) {
         if (isLandscape) {
             LandscapeScreen(vm = weatherVM, Modifier.padding(it))
         } else {
-            PortraitScreen(vm = weatherVM, Modifier.padding(it))
+            PortraitScreen(scope, snackBarHostState, vm = weatherVM, Modifier.padding(it))
         }
 
     }
@@ -77,11 +79,17 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
+private fun PortraitScreen(scope: CoroutineScope, snackbarHostState: SnackbarHostState, vm: WeatherVM, modifier: Modifier) {
     val isLoading by vm.isLoading.collectAsState()
     val searchQuery by vm.searchQuery.collectAsState()
     val places by vm.places.collectAsState()
     val isSearching by vm.isSearching.collectAsState()
+    val topBarState by vm.topBarState.collectAsState()
+
+
+
+
+
     
     Column(
         modifier = Modifier
@@ -92,27 +100,17 @@ private fun PortraitScreen(vm: WeatherVM, modifier: Modifier) {
     ) {
 
         Row {
-            CenterAlignedTopAppBar(
-                modifier = modifier.fillMaxWidth(),
-                title = { SearchBar(onSearch = vm::onSearchTextChanged, searchText = searchQuery)},
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors (
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    titleContentColor =  MaterialTheme.colorScheme.onPrimaryContainer,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                navigationIcon = { Icon(painter = painterResource(id = R.drawable.sunny), contentDescription = null)},
-                actions = {
-                    IconButton(onClick = { vm.getWeatherFromDb() }) {
-                        Icon(painter = painterResource(id = R.drawable.settings), contentDescription = null)
-                        
-                    }
-                }
-            )
+            TopBar(topBarState = topBarState, onSearch = vm::onSearchTextChanged, showSearch = vm::showSearch, isConnected = vm::getConnectivity, showSnackBar = { message, duration ->
+                showSnackbar(
+                    scope,
+                    snackbarHostState,
+                    message,
+                    duration
+                )
+            })
         }
 
-        if (searchQuery.isNotEmpty()) {
+        if (topBarState.searchText.isNotEmpty()) {
             Row(modifier.weight(1.2f)) {
                 ModalDrawerSheet(modifier = Modifier.fillMaxSize()) {
                     LazyColumn(
@@ -375,5 +373,20 @@ private fun getPictureName(weatherState: String): Int {
         "Fog" -> R.drawable.sunny //TODO: lägg till fog
         "Other" -> R.drawable.sunny //TODO: ???
         else -> R.drawable.sunny //TODO: ändra??
+    }
+}
+
+private fun showSnackbar(
+    scope: CoroutineScope,
+    snackbarHostState: SnackbarHostState,
+    message: String,
+    duration: SnackbarDuration
+) {
+    scope.launch {
+        snackbarHostState.showSnackbar(
+            message = message,
+            actionLabel = "Close",
+            duration = duration
+        )
     }
 }

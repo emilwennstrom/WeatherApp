@@ -3,6 +3,7 @@ package algot.emil.ui.viewmodel
 import algot.emil.PersistenceContext
 import algot.emil.api.DailyWeatherDisplay
 import algot.emil.api.PlaceData
+import algot.emil.data.TopBarProperties
 import algot.emil.enums.WeatherState
 import algot.emil.model.WeatherModel
 import algot.emil.persistence.Weather
@@ -54,6 +55,9 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    private val _topBarState = MutableStateFlow(TopBarProperties())
+    val topBarState: StateFlow<TopBarProperties> = _topBarState.asStateFlow()
+
 
 
     private val _isSearching = MutableStateFlow(false)
@@ -102,29 +106,19 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     val temperatureUnit: StateFlow<String>
         get() = _temperatureUnit
 
-    /*fun getWeatherNextSevenDays() {
-        viewModelScope.launch { // launching a new coroutine
-            if (weatherModel.fetchWeatherNextSevenDays()) {
-                if (weatherModel.weatherDisplay != null) {
-                    _dailyWeather.value = weatherModel.weatherDisplay!!
-                }
-                if (weatherModel.temperatureUnit != null) {
-                    _temperatureUnit.value = weatherModel.temperatureUnit!!
-                }
-                _isLoading.value = false
-            }
-        }
-    }*/
 
-   /* fun getWeatherHourly() {
-        viewModelScope.launch { // launching a new coroutine
-            if (weatherModel.fetchWeatherNextHours()) {
-                //TODO: implement
-            }
-        }
-    }*/
+    fun getConnectivity() : Boolean {
+        return weatherModel.isNetworkAvailable()
+    }
 
-    fun getWeatherFromDb() {
+    fun showSearch() {
+        _topBarState.value = topBarState.value.copy(isSearchShown = !topBarState.value.isSearchShown)
+        Log.d(TAG, "TopBarState is now: " + _topBarState.value.isSearchShown)
+    }
+
+
+
+    private fun getWeatherFromDb() {
         viewModelScope.launch {
             launch {
                 weatherModel.allWeather.collect {
@@ -142,21 +136,17 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     }
 
     fun updateWeatherFromQuery(placeData: PlaceData) {
-
         viewModelScope.launch {
             val success = weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
             if (success.first && success.second) {
                 _isLoading.value = false
             }
         }
-
-        _searchQuery.value = ""
-
-        Log.d(TAG, placeData.display_name)
+        _topBarState.value = topBarState.value.copy(searchText = "")
     }
 
     fun onSearchTextChanged(query: String) {
-        _searchQuery.value = query
+        _topBarState.value = topBarState.value.copy(searchText = query)
         viewModelScope.launch {
             delay(1000)
             if (query.isNotEmpty()) {
