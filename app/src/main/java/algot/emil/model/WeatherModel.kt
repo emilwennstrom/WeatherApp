@@ -47,6 +47,9 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         allWeatherHourlyFromTime = weatherHourlyDao.getAllAfter(time)
     }
 
+    /**
+     * decreases current hour by -1 to be able to retreive WeatherHourly during current hour.
+     */
     fun getCurrentDateTimeFormatted(): String {
         val calendar = Calendar.getInstance()
         // Check if the hour is 0 and set to 23, else decrease by 1
