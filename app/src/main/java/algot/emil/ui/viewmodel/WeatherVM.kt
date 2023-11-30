@@ -1,10 +1,8 @@
 package algot.emil.ui.viewmodel
 
 import algot.emil.PersistenceContext
-import algot.emil.api.DailyWeatherDisplay
 import algot.emil.data.PlaceData
 import algot.emil.data.TopBarProperties
-import algot.emil.enums.WeatherState
 import algot.emil.model.PlaceRepository
 import algot.emil.model.WeatherModel
 import algot.emil.persistence.Place
@@ -13,14 +11,14 @@ import algot.emil.persistence.WeatherHourly
 import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
+import android.os.Build
 import android.util.Log
-import androidx.compose.runtime.collectAsState
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -28,29 +26,25 @@ import java.util.Locale
 
 private const val TAG = "WeatherVM"
 
-interface WeatherViewModel{
+interface WeatherViewModel {
     fun convertDateToWeekday(dateStr: String): String
 }
 
 
+
+
+
+@RequiresApi(Build.VERSION_CODES.O)
 class WeatherVM(application: Application) : AndroidViewModel(application = application),
     WeatherViewModel {
 
-    private val connectivity = application.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private val connectivity =
+        application.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val persistenceContext = application as PersistenceContext
 
-    private val weatherModel: WeatherModel =
-        WeatherModel(persistenceContext, connectivity) // Skapa en instans av WeatherModel
+    private val weatherModel: WeatherModel = WeatherModel(persistenceContext, connectivity)
 
     private val placeRepository: PlaceRepository = PlaceRepository(persistenceContext.placeDao)
-
-    private val _name = MutableStateFlow("Algot")
-
-    private val _dayOfWeek = MutableStateFlow<Weather?>(null)
-    val dayOfWeek: StateFlow<Weather?> = _dayOfWeek.asStateFlow()
-
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     private val _topBarState = MutableStateFlow(TopBarProperties())
     val topBarState: StateFlow<TopBarProperties> = _topBarState.asStateFlow()
@@ -64,43 +58,17 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private val _places = MutableStateFlow(emptyList<PlaceData>())
     val places = _places.asStateFlow()
 
-
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading
-
-    val name: StateFlow<String>
-        get() = _name
-
-    private val _dailyWeather = MutableStateFlow<List<DailyWeatherDisplay>>(
-        listOf(
-            DailyWeatherDisplay(
-                time = "2023-11-28",
-                weather_State_code = WeatherState.ClearSky,
-                temperature_2m_max = 0.0F // Default temperature
-            )
-            // Add more DailyWeatherDisplay objects as needed
-        )
-    )
-    val dailyWeather: StateFlow<List<DailyWeatherDisplay>> //what weather-information to display from today to 7 days forward with daily updates
-        get() = _dailyWeather
-
-    private val _temperatureUnit =
-        MutableStateFlow<String>("C?") //for example, C (celsius) or F (fahrenheit)
-    val temperatureUnit: StateFlow<String>
-        get() = _temperatureUnit
-
-
-    fun getConnectivity() : Boolean {
+    fun getConnectivity(): Boolean {
         return weatherModel.isNetworkAvailable()
     }
 
     fun showSearch() {
-        _topBarState.value = topBarState.value.copy(isSearchShown = !topBarState.value.isSearchShown)
-        Log.d(TAG, "TopBarState is now: " + _topBarState.value.isSearchShown)
+        _topBarState.value =
+            topBarState.value.copy(isSearchShown = !topBarState.value.isSearchShown)
     }
 
 
-    private fun getCurrentPlaceName(){
+    private fun getCurrentPlaceName() {
         viewModelScope.launch {
             placeRepository.getName().collect {
                 _topBarState.value = topBarState.value.copy(currentPlace = it)
@@ -109,33 +77,34 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     }
 
 
-
     private fun getWeatherFromDb() {
         viewModelScope.launch {
             launch {
-                weatherModel.allWeather.collect {
-                        wList ->
+                weatherModel.sevenDayWeather.collect { wList ->
                     _allWeather.value = wList // setting the list
                 }
             }
             launch {
-                weatherModel.getAllWeatherHourlyFromTime()
-                weatherModel.allWeatherHourlyFromTime.collect {
-                        wList ->
+                weatherModel.getHourlyWeatherFromCurrentTimeFromDb().collect { wList ->
                     _allWeatherHourly.value = wList // setting the list
                 }
             }
         }
-        _isLoading.value = false
     }
 
     fun updateWeatherFromQuery(placeData: PlaceData) {
         if (getConnectivity()) {
             viewModelScope.launch {
-                val success = weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
+                val success =
+                    weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
                 if (success.first && success.second) {
-                    _isLoading.value = false
-                    placeRepository.insert(place = Place(name = placeData.display_name, latitude = placeData.lat.toFloat(), longitude = placeData.lon.toFloat()))
+                    placeRepository.insert(
+                        place = Place(
+                            name = placeData.display_name,
+                            latitude = placeData.lat.toFloat(),
+                            longitude = placeData.lon.toFloat()
+                        )
+                    )
                 }
             }
             updateTopBarTextField("")
@@ -165,25 +134,29 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     }
 
 
-    fun updateHourly(time: String){
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun updateHourly(time: String) {
         Log.d("updateHourly", "inside updateHourly")
-        var reformatedTime = weatherModel.reformatDate(time)
-        var place : Place?=null
+        Log.d(TAG, time)
+        var place: Place?
         viewModelScope.launch {
             placeRepository.getPlace().collect { currentPlace ->
                 place = currentPlace
                 val latitude = place?.latitude
                 val longitude = place?.longitude
+                if (latitude != null && longitude != null) {
+                    weatherModel.fetchHourlyWeatherWithStartDate(
+                        latitude, longitude, time
+                    ).collect {
+                        if (it.isNotEmpty()){
+                            //_allWeatherHourly.value = emptyList()
+                            _allWeatherHourly.value = it
+                        }
 
-                Log.d("updateHourly", "latitude: " + latitude)
-                Log.d("updateHourly", "longitude: " + longitude)
-                Log.d("updateHourly", "reformatedTime: " + reformatedTime)
-                if(latitude!=null && longitude!= null){
-                    weatherModel.fetchWeatherNextHoursWithStartDate(latitude,longitude,reformatedTime)
-                    weatherModel.getAllWeatherHourly()
-                    weatherModel.allWeatherHourlyFromTime.collect { wList ->
-                        _allWeatherHourly.value = wList // setting the list
                     }
+                }
+                else {
+                    Log.d(TAG, "Null coordinates")
                 }
             }
         }
@@ -207,7 +180,8 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         if (date != null) {
             calendar.time = date
         }
-        return calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()) ?: ""
+        return calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault())
+            ?: ""
     }
 
     init {
@@ -215,6 +189,18 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         getWeatherFromDb()
         getCurrentPlaceName()
 
+
+        if (getConnectivity()) {
+            viewModelScope.launch {
+                placeRepository.getPlace().collect {
+                    val current = it
+                    if (current != null) {
+                        weatherModel.fetchWeatherData(current.latitude, current.longitude)
+                    }
+                }
+            }
+        }
     }
+
 
 }

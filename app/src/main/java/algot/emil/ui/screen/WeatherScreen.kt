@@ -7,6 +7,8 @@ import algot.emil.ui.screen.components.SearchResultScreen
 import algot.emil.ui.screen.components.TopBar
 import algot.emil.ui.viewmodel.WeatherVM
 import android.content.res.Configuration
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,13 +21,11 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,6 +51,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
@@ -74,6 +75,7 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun PortraitScreen(
     scope: CoroutineScope,
@@ -81,7 +83,6 @@ private fun PortraitScreen(
     vm: WeatherVM,
     modifier: Modifier
 ) {
-    val isLoading by vm.isLoading.collectAsState()
     val places by vm.places.collectAsState()
     val topBarState by vm.topBarState.collectAsState()
     val sevenDayWeather by vm.allWeather.collectAsState()
@@ -99,7 +100,7 @@ private fun PortraitScreen(
 
         Row {
             var icon = R.drawable.sunny
-            if (sevenDayWeather.isNotEmpty()){
+            if (sevenDayWeather.isNotEmpty()) {
                 icon = getPictureName(sevenDayWeather[0].weatherState.toString())
             }
 
@@ -126,28 +127,28 @@ private fun PortraitScreen(
         }
 
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
-        if (!isLoading) {
-            Row(
-                modifier = Modifier
-                    .weight(0.2f)
-                    .fillMaxSize()
-            ) {
-                ListSevenDays(sevenDayWeather = sevenDayWeather,vm::convertDateToWeekday, vm::updateHourly)
-            }
-            Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
-            Row(
-                modifier = Modifier
-                    .weight(0.8f)
-                    .fillMaxSize()
-            ) {
-                ListHourly(hourlyWeather)
-            }
+        Row(
+            modifier = Modifier
+                .weight(0.2f)
+                .fillMaxSize()
+        ) {
+            ListSevenDays(
+                sevenDayWeather = sevenDayWeather,
+                vm::convertDateToWeekday,
+                vm::updateHourly
+            )
+        }
+        Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
+        Row(
+            modifier = Modifier
+                .weight(0.8f)
+                .fillMaxSize()
+        ) {
+            ListHourly(hourlyWeather)
         }
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
     }
 }
-
-
 
 
 @Composable
@@ -279,10 +280,10 @@ private fun WeatherImage(weatherState: String) {
         contentAlignment = Alignment.Center
     ) {
         // Background image
-       /* Image(
-            painter = painterResource(R.drawable.ic_launcher_background),
-            contentDescription = "Background"
-        )*/
+        /* Image(
+             painter = painterResource(R.drawable.ic_launcher_background),
+             contentDescription = "Background"
+         )*/
         // Foreground image
         Image(
             painter = painterResource(getPictureName(weatherState)),
@@ -305,7 +306,7 @@ private fun getPictureName(weatherState: String): Int {
         "RainSlight" -> R.drawable.rainy_light
         "RainModerate" -> R.drawable.rainy_heavy
         "RainHeavy" -> R.drawable.rainy_heavy
-        "Snow" -> R.drawable.snowing_heavy
+        "Snow" -> R.drawable.weather_snowy
         "Thunderstorm" -> R.drawable.thunderstorm
         "Fog" -> R.drawable.sunny //TODO: lägg till fog
         "Other" -> R.drawable.sunny //TODO: ???

@@ -11,15 +11,15 @@ class PlaceRepository(private val placeDao: PlaceDao) {
         placeDao.insert(place)
     }
 
-    fun getPlace() : Flow<Place> {
+    fun getPlace() : Flow<Place?> {
         return placeDao.getPlace()
     }
 
-    fun getName() : Flow<String> {
+    fun getName() : Flow<String?> {
         return placeDao.getName()
     }
 
-    fun getLatitude() : Flow<Float> {
+    fun getLatitude() : Flow<Float?> {
         return placeDao.getLatitude()
     }
 

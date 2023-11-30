@@ -13,7 +13,7 @@ interface WeatherHourlyDao {
     @Query(value = "SELECT * FROM WeatherHourly")
     fun getAll(): Flow<List<WeatherHourly>>
 
-    @Query("SELECT * FROM WeatherHourly WHERE time > :startTime AND time< :endTime" )
+    @Query("SELECT * FROM WeatherHourly WHERE time > :startTime AND time < :endTime" )
     fun getAllAfter(startTime: String, endTime: String): Flow<List<WeatherHourly>>
 
     @Query(value = "SELECT * FROM WeatherHourly WHERE id = :id")
@@ -21,6 +21,9 @@ interface WeatherHourlyDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(weatherHourly: WeatherHourly): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(weatherHourly: List<WeatherHourly>)
 
     @Query(value = "DELETE FROM WeatherHourly")
     suspend fun deleteAll();
