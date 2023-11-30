@@ -19,5 +19,10 @@ class PlaceRepository(private val placeDao: PlaceDao) {
         return placeDao.getName()
     }
 
+    fun getLatitude() : Flow<Float> {
+        return placeDao.getLatitude()
+    }
+
+
 
 }

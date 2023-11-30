@@ -119,7 +119,7 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
     /**
      * Note: format for startDate is "2023-11-30"
      */
-    private suspend fun fetchWeatherNextHoursWithStartDate(lat: Float, lon: Float, startDate:String): Boolean {
+    public suspend fun fetchWeatherNextHoursWithStartDate(lat: Float, lon: Float, startDate:String): Boolean {
         if(isNetworkAvailable()){
             Log.d("GetWeatherResultsHourly: ", "starting API call")
             val result = WeatherApi.getHourlyWeatherWithTimeInterval(lat, lon, startDate,addOneDay(startDate) )

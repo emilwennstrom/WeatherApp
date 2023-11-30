@@ -16,6 +16,9 @@ interface PlaceDao {
     @Query("SELECT * FROM place where id = 1")
     fun getPlace() : Flow<Place>
 
+    @Query("SELECT latitude FROM place where id = 1")
+    fun getLatitude() : Flow<Float>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(place: Place);
 

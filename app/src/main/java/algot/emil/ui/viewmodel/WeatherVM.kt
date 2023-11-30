@@ -14,11 +14,13 @@ import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.util.Log
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -166,8 +168,24 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     //TODO: Sedan anropa eatherModel.fetchWeatherNextHoursWithStartDate med longitud, latitud och reformatedTime
     //TODO: då borde hourly uppdateras för den dag man klickar på.
     fun updateHourly(time: String){
+        Log.d("updateHourly", "inside updateHourly")
         var reformatedTime = weatherModel.reformatDate(time)
-        //placeRepository.get()
+        Log.d("updateHourly", "reformatedTime: " + reformatedTime)
+        var place : Place?=null
+        viewModelScope.launch {
+            placeRepository.getPlace().collect { currentPlace ->
+                place = currentPlace
+                val latitude = place?.latitude
+                val longitude = place?.longitude
+
+                Log.d("updateHourly", "latitude: " + latitude)
+                Log.d("updateHourly", "longitude: " + longitude)
+                Log.d("updateHourly", "reformatedTime: " + reformatedTime)
+                if(latitude!=null && longitude!= null){
+                    weatherModel.fetchWeatherNextHoursWithStartDate(latitude,longitude,reformatedTime)
+                }
+            }
+        }
         //weatherModel.fetchWeatherNextHoursWithStartDate(reformatedTime)
         //weatherModel.allWeatherHourlyFromTime(reformatedTime)
         //launch {
