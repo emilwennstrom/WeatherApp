@@ -48,6 +48,10 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         allWeatherHourlyFromTime = weatherHourlyDao.getAllAfter(startTime, endTime)
     }
 
+    public suspend fun getAllWeatherHourly() {
+        allWeatherHourlyFromTime = weatherHourlyDao.getAll()
+    }
+
     fun getCurrentDateTimePlus24HoursFormatted():String{
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR,1)
@@ -62,7 +66,7 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         val calendar = Calendar.getInstance()
         // Check if the hour is 0 and set to 23, else decrease by 1
         if (calendar.get(Calendar.HOUR_OF_DAY) == 0) {
-            calendar.set(Calendar.HOUR_OF_DAY, 23)
+            calendar.set(Calendar.HOUR_OF_DAY, 23) //tror detta är onödigt. Detta lär skötas automatiskt av -1 nedan ändå.
         } else {
             calendar.add(Calendar.HOUR_OF_DAY, -1)
         }
@@ -96,12 +100,16 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         }
     }
 
+    /**
+     * is used to calculate end-date for API-calls, with start-date as input.
+     */
     fun addOneDay(dateStr: String): String {
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val date = format.parse(dateStr)
         val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.DAY_OF_MONTH, 1)
+        Log.d("updateHourly", "endDate: " +format.format(calendar.time))
         return format.format(calendar.time)
     }
 
@@ -197,6 +205,7 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
                 windDirection = weather.wind_direction_10m
             )
             weatherHourlyDao.insert(weatherHourly)
+            Log.d("replaceHourlyWeatherDataInDb", weatherHourly.toString())
         }
     }
 

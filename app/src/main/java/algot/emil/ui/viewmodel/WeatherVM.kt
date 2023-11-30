@@ -164,13 +164,10 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         }
     }
 
-    //TODO: anropa placeRepository.get() för att få longitud och latitud.
-    //TODO: Sedan anropa eatherModel.fetchWeatherNextHoursWithStartDate med longitud, latitud och reformatedTime
-    //TODO: då borde hourly uppdateras för den dag man klickar på.
+
     fun updateHourly(time: String){
         Log.d("updateHourly", "inside updateHourly")
         var reformatedTime = weatherModel.reformatDate(time)
-        Log.d("updateHourly", "reformatedTime: " + reformatedTime)
         var place : Place?=null
         viewModelScope.launch {
             placeRepository.getPlace().collect { currentPlace ->
@@ -183,9 +180,14 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                 Log.d("updateHourly", "reformatedTime: " + reformatedTime)
                 if(latitude!=null && longitude!= null){
                     weatherModel.fetchWeatherNextHoursWithStartDate(latitude,longitude,reformatedTime)
+                    weatherModel.getAllWeatherHourly()
+                    weatherModel.allWeatherHourlyFromTime.collect { wList ->
+                        _allWeatherHourly.value = wList // setting the list
+                    }
                 }
             }
         }
+
         //weatherModel.fetchWeatherNextHoursWithStartDate(reformatedTime)
         //weatherModel.allWeatherHourlyFromTime(reformatedTime)
         //launch {
