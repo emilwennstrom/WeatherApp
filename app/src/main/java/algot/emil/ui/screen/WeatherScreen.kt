@@ -66,7 +66,7 @@ fun WeatherScreen(weatherVM: WeatherVM = viewModel()) {
 
     Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) }) {
         if (isLandscape) {
-            LandscapeScreen(vm = weatherVM, Modifier.padding(it))
+            LandscapeScreen(scope, snackBarHostState, vm = weatherVM, Modifier.padding(it))
         } else {
             PortraitScreen(scope, snackBarHostState, vm = weatherVM, Modifier.padding(it))
         }
@@ -151,14 +151,10 @@ private fun PortraitScreen(
 }
 
 
-@Composable
-private fun LandscapeScreen(vm: WeatherVM, modifier: Modifier) {
-    //Greeting(name = "horisonetelll ")
-}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ListHourly(hourlyWeather: List<WeatherHourly>, modifier: Modifier = Modifier) {
+fun ListHourly(hourlyWeather: List<WeatherHourly>, modifier: Modifier = Modifier) {
     LazyColumn {
         items(hourlyWeather) { weather ->
             Card(
@@ -217,7 +213,7 @@ private fun ListHourly(hourlyWeather: List<WeatherHourly>, modifier: Modifier = 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ListSevenDays(
+fun ListSevenDays(
     sevenDayWeather: List<Weather>,
     convertDateToWeekday: (String) -> String,
     updateHourly: (String) -> Unit
@@ -297,7 +293,7 @@ private fun WeatherImage(weatherState: String) {
 ClearSky, MainlyClear, PartlyCloudy, Overcast, RainSlight, RainModerate, RainHeavy,
    Snow, Thunderstorm, Fog, Other
  */
-private fun getPictureName(weatherState: String): Int {
+fun getPictureName(weatherState: String): Int {
     return when (weatherState) {
         "ClearSky" -> R.drawable.sunny
         "MainlyClear" -> R.drawable.sunny
@@ -314,7 +310,7 @@ private fun getPictureName(weatherState: String): Int {
     }
 }
 
-private fun showSnackbar(
+fun showSnackbar(
     scope: CoroutineScope,
     snackbarHostState: SnackbarHostState,
     message: String,
