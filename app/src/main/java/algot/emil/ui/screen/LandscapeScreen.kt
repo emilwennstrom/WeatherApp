@@ -76,7 +76,7 @@ fun LandscapeScreen(
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
         Row(
             modifier = Modifier
-                .weight(0.2f)
+                .weight(0.3f)
                 .fillMaxSize()
         ) {
             ListSevenDays(
@@ -88,7 +88,7 @@ fun LandscapeScreen(
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
         Row(
             modifier = Modifier
-                .weight(0.8f)
+                .weight(0.7f)
                 .fillMaxSize()
         ) {
             ListHourly(hourlyWeather)
