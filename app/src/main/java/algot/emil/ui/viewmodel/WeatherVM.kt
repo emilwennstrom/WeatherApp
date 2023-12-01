@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.Locale
 
@@ -92,20 +93,36 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     fun updateWeatherFromQuery(placeData: PlaceData) {
         if (getConnectivity()) {
             viewModelScope.launch {
-                val success =
-                    weatherModel.fetchWeatherData(placeData.lat.toFloat(), placeData.lon.toFloat())
-                if (success.first && success.second) {
+                val lat = placeData.lat.toFloat()
+                val lon = placeData.lon.toFloat()
+                launch {
+                    weatherModel.fetchWeatherNextSevenDays(
+                        lat,
+                        lon
+                    ).collect {
+                        _allWeather.value = it
+                    }
+                }
+                launch {
+                    weatherModel.fetchHourlyWeatherWithStartDate(lat, lon, LocalDate.now().toString())
+                        .collect {
+                            _allWeatherHourly.value = it
+                        }
+                }
+                launch {
                     placeRepository.insert(
                         place = Place(
                             name = placeData.display_name,
-                            latitude = placeData.lat.toFloat(),
-                            longitude = placeData.lon.toFloat()
+                            latitude = lat,
+                            longitude = lon
                         )
                     )
                 }
+                
             }
             updateTopBarTextField("")
-            _topBarState.value = topBarState.value.copy(isSearchShown = false)
+            _topBarState.value =
+                topBarState.value.copy(isSearchShown = false, currentPlace = placeData.display_name)
         }
     }
 
@@ -140,27 +157,37 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                 val latitude = place?.latitude
                 val longitude = place?.longitude
                 if (latitude != null && longitude != null) {
-                    weatherModel.fetchHourlyWeatherWithStartDate(
-                        latitude, longitude, time
-                    ).collect {
-                        _allWeatherHourly.value = it
+                    launch {
+                        weatherModel.fetchHourlyWeatherWithStartDate(
+                            latitude, longitude, time
+                        ).collect {
+                            _allWeatherHourly.value = it
+                            for (element in it) {
+                                Log.d(TAG, element.time)
+                            }
+                            if (it.isEmpty()) {
+                                Log.d(TAG, "IT was empty")
+                            }
+                        }
                     }
+
                 } else {
                     Log.d(TAG, "Null coordinates")
                 }
             }
         }
-
-        //weatherModel.fetchWeatherNextHoursWithStartDate(reformatedTime)
-        //weatherModel.allWeatherHourlyFromTime(reformatedTime)
-        //launch {
-        //    weatherModel.allWeatherHourlyFromTime(reformatedTime)
-        //    weatherModel.allWeatherHourlyFromTime.collect {
-        //            wList ->
-        //        _allWeatherHourly.value = wList // setting the list
-        //    }
-        //}
     }
+
+
+    //weatherModel.fetchWeatherNextHoursWithStartDate(reformatedTime)
+    //weatherModel.allWeatherHourlyFromTime(reformatedTime)
+    //launch {
+    //    weatherModel.allWeatherHourlyFromTime(reformatedTime)
+    //    weatherModel.allWeatherHourlyFromTime.collect {
+    //            wList ->
+    //        _allWeatherHourly.value = wList // setting the list
+    //    }
+    //}
 
 
     override fun convertDateToWeekday(dateStr: String): String {
@@ -175,20 +202,33 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     }
 
     init {
-
-        getWeatherFromDb()
         getCurrentPlaceName()
-
-
         if (getConnectivity()) {
             viewModelScope.launch {
                 placeRepository.getPlace().collect {
                     val current = it
                     if (current != null) {
-                        weatherModel.fetchWeatherData(current.latitude, current.longitude)
+                        launch {
+                            weatherModel.fetchHourlyWeatherWithStartDate(
+                                current.latitude,
+                                current.longitude,
+                                LocalDate.now().toString()
+                            ).collect { hourly ->
+                                _allWeatherHourly.value = hourly
+                            }
+                        }
+                        launch {
+                            weatherModel.fetchWeatherNextSevenDays(current.latitude, current.longitude)
+                                .collect { weekly ->
+                                    _allWeather.value = weekly
+                                }
+                        }
+
                     }
                 }
             }
+        } else {
+            getWeatherFromDb()
         }
     }
 

@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class WeatherHourly (
-    @PrimaryKey(autoGenerate = true) val id: Long,
+    @PrimaryKey(autoGenerate = true) var id: Long = 0,
     @ColumnInfo(name = "time") val time: String,
     @ColumnInfo(name = "weather_state") val weatherState: WeatherState,
     @ColumnInfo(name = "temperature_2m") val temperature: Float, //laddas in som double

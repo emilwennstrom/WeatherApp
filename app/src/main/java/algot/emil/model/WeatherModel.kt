@@ -14,10 +14,13 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -36,11 +39,13 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
     private val connectivityManager = connectivity
 
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun getHourlyWeatherFromCurrentTimeFromDb(): Flow<List<WeatherHourly>> {
-        val startTime = getCurrentDateTimeFormatted()
-        val endTime = getCurrentDateTimePlus24HoursFormatted()
-        Log.d("WeatherModel", "date:" + getCurrentDateTimeFormatted())
-        return weatherHourlyDao.getAllAfter(startTime, endTime)
+        return weatherHourlyDao.getFirst()
+            .take(1)
+            .flatMapConcat { weatherHourly ->
+                weatherHourlyDao.getAllAfter(weatherHourly.time, addOneDay(weatherHourly.time))
+            }
     }
 
     private fun getCurrentDateTimePlus24HoursFormatted(): String {
@@ -67,29 +72,17 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         return format.format(calendar.time)
     }
 
-    private suspend fun fetchWeatherNextSevenDays(lat: Float, lon: Float): Boolean {
+    suspend fun fetchWeatherNextSevenDays(lat: Float, lon: Float): Flow<List<Weather>> {
         if (isNetworkAvailable()) {
-            Log.d("GetWeatherResults: ", "starting API call")
             val result = WeatherApi.getDailyWeatherForSevenDays(lat, lon)
-            // Checking the results
-            Log.d("GetWeatherResults: ", result.body().toString())
             if (result.isSuccessful && result.body() != null) {
                 val resultBody = result.body()!!  // Extract WeatherData from the response
                 val weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
-                Log.d(
-                    "GetWeatherResults:", "list of result converted: $weatherDisplay"
-                )
-
                 replaceWeatherDataInDb(weatherDisplay)
-
-
-                return true
+                return weatherDao.getAll()
             }
-            return false
-        } else {
-            weatherDao.getAll()
-            return true
         }
+        return emptyFlow()
     }
 
     /**
@@ -146,8 +139,10 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         } else {
             getHourlyWeatherOfOtherDay(weatherHourly, startDate)
         }
-        return flow { emit(display) }
 
+        replaceHourlyDataInDb(display)
+
+        return weatherHourlyDao.getAll()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -165,6 +160,11 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         return newList
     }
 
+    private suspend fun replaceHourlyDataInDb(display: MutableList<WeatherHourly>) {
+        weatherHourlyDao.deleteAll()
+        weatherHourlyDao.insertAll(display)
+    }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun getHourlyWeatherOfToday(weatherHourly: MutableList<WeatherHourly>): MutableList<WeatherHourly> {
@@ -173,7 +173,6 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
             val dateTime = LocalDateTime.parse(element.time)
             val date = dateTime.toLocalDate()
             if (dateTime >= LocalDateTime.now() && date == LocalDate.now()) {
-                Log.d("MODEL", element.time)
                 newList.add(element)
             }
 
@@ -192,13 +191,6 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         val calendar = Calendar.getInstance()
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         return format.format(calendar.time)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun fetchWeatherData(lat: Float, lon: Float): Pair<Boolean, Boolean> {
-        val isSevenDayFetched = fetchWeatherNextSevenDays(lat, lon)
-        val isNextHoursFetched = fetchWeatherNextHours(lat, lon)
-        return Pair(isSevenDayFetched, isNextHoursFetched)
     }
 
 
@@ -220,10 +212,8 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
 
     private fun apiDataToWeatherHourly(weatherHourlyDisplay: List<HourlyDataDisplay>): MutableList<WeatherHourly> {
         val weatherHourlyList: MutableList<WeatherHourly> = mutableListOf()
-        var dayNumber = 1L
         for (weather in weatherHourlyDisplay) {
             val weatherHourly = WeatherHourly(
-                id = dayNumber++,
                 time = weather.time,
                 weatherState = weather.weather_state,
                 temperature = weather.temperature_2m.toFloat(), // Assuming the WeatherHourly class takes a Float

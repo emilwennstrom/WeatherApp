@@ -19,6 +19,9 @@ interface WeatherHourlyDao {
     @Query(value = "SELECT * FROM WeatherHourly WHERE id = :id")
     fun get(id: Long) : Flow<WeatherHourly>
 
+    @Query("SELECT * FROM WeatherHourly LIMIT 1")
+    fun getFirst() : Flow<WeatherHourly>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(weatherHourly: WeatherHourly): Long
 
