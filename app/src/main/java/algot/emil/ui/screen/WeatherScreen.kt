@@ -223,7 +223,6 @@ fun ListSevenDays(
     convertDateToWeekday: (String) -> String,
     updateHourly: (String) -> Unit
 ) {
-
     LazyRow {
         items(sevenDayWeather) { weather ->
             Log.d("view", weather.time.toString())
@@ -284,7 +283,7 @@ private fun WindImage(degrees: Int) {
 }
 
 @Composable
-private fun WeatherImage(weatherState: String) {
+fun WeatherImage(weatherState: String) {
     Box(
         contentAlignment = Alignment.Center
     ) {

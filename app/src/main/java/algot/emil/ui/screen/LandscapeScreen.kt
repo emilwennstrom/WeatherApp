@@ -34,6 +34,7 @@ fun LandscapeScreen(
     val topBarState by vm.topBarState.collectAsState()
     val sevenDayWeather by vm.allWeather.collectAsState()
     val hourlyWeather by vm.allWeatherHourly.collectAsState()
+    val selectedDate by vm.currentDate.collectAsState()
 
 
 
@@ -81,6 +82,7 @@ fun LandscapeScreen(
         ) {
             ListSevenDays(
                 sevenDayWeather = sevenDayWeather,
+                selectedDate = selectedDate,
                 vm::convertDateToWeekday,
                 vm::updateHourly
             )
@@ -96,3 +98,4 @@ fun LandscapeScreen(
         Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onBackground)
     }
 }
+
