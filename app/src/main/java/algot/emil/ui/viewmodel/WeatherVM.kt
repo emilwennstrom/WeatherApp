@@ -31,9 +31,6 @@ interface WeatherViewModel {
 }
 
 
-
-
-
 @RequiresApi(Build.VERSION_CODES.O)
 class WeatherVM(application: Application) : AndroidViewModel(application = application),
     WeatherViewModel {
@@ -136,8 +133,6 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun updateHourly(time: String) {
-        Log.d("updateHourly", "inside updateHourly")
-        Log.d(TAG, time)
         var place: Place?
         viewModelScope.launch {
             placeRepository.getPlace().collect { currentPlace ->
@@ -148,14 +143,9 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                     weatherModel.fetchHourlyWeatherWithStartDate(
                         latitude, longitude, time
                     ).collect {
-                        if (it.isNotEmpty()){
-                            //_allWeatherHourly.value = emptyList()
-                            _allWeatherHourly.value = it
-                        }
-
+                        _allWeatherHourly.value = it
                     }
-                }
-                else {
+                } else {
                     Log.d(TAG, "Null coordinates")
                 }
             }

@@ -1,10 +1,8 @@
 package algot.emil.model
 
 import algot.emil.PersistenceContext
-import algot.emil.api.DailyUnits
 import algot.emil.api.DailyWeatherDisplay
 import algot.emil.api.HourlyDataDisplay
-import algot.emil.api.HourlyUnits
 import algot.emil.api.WeatherApi
 import algot.emil.api.WeatherConverter
 import algot.emil.data.PlaceData
@@ -15,30 +13,28 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.Locale
+
+
+private const val TAG = "WeatherModel"
 
 class WeatherModel(persistenceContext: PersistenceContext, connectivity: ConnectivityManager) {
     private val weatherDao = persistenceContext.weatherDao
     val sevenDayWeather = weatherDao.getAll()
     private val weatherHourlyDao = persistenceContext.weatherHourlyDao
-    val allWeatherHourly = weatherHourlyDao.getAll()
-
 
     private val connectivityManager = connectivity
 
-    var weatherDisplay: List<DailyWeatherDisplay>? = null
-    var displayUnit: DailyUnits? = null
-    var temperatureUnit: String? = "C"
-
-
-    var weatherHourlyDisplay: List<HourlyDataDisplay>? = null
-    var hourlyUnits: HourlyUnits? = null
 
     fun getHourlyWeatherFromCurrentTimeFromDb(): Flow<List<WeatherHourly>> {
         val startTime = getCurrentDateTimeFormatted()
@@ -62,8 +58,7 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         // Check if the hour is 0 and set to 23, else decrease by 1
         if (calendar.get(Calendar.HOUR_OF_DAY) == 0) {
             calendar.set(
-                Calendar.HOUR_OF_DAY,
-                23
+                Calendar.HOUR_OF_DAY, 23
             ) //tror detta är onödigt. Detta lär skötas automatiskt av -1 nedan ändå.
         } else {
             calendar.add(Calendar.HOUR_OF_DAY, -1)
@@ -80,16 +75,12 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
             Log.d("GetWeatherResults: ", result.body().toString())
             if (result.isSuccessful && result.body() != null) {
                 val resultBody = result.body()!!  // Extract WeatherData from the response
-                weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
+                val weatherDisplay = WeatherConverter().getDailyWeatherDisplay(resultBody)
                 Log.d(
-                    "GetWeatherResults:",
-                    "list of result converted: " + weatherDisplay.toString()
+                    "GetWeatherResults:", "list of result converted: $weatherDisplay"
                 )
-                displayUnit = WeatherConverter().getDailyUnits(resultBody)
-                Log.d("GetWeatherResults:", "daily units: " + displayUnit.toString())
-                temperatureUnit = displayUnit!!.temperature_2m_max
 
-                replaceWeatherDataInDb()
+                replaceWeatherDataInDb(weatherDisplay)
 
 
                 return true
@@ -108,7 +99,9 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val date = format.parse(dateStr)
         val calendar = Calendar.getInstance()
-        calendar.time = date
+        if (date != null) {
+            calendar.time = date
+        }
         Log.d("AddOneDay", calendar.time.toString())
         calendar.add(Calendar.DAY_OF_MONTH, 1)
         Log.d("updateHourly", "endDate: " + format.format(calendar.time))
@@ -129,45 +122,63 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
     /**
      * Note: format for startDate is "2023-11-30"
      */
+    @OptIn(DelicateCoroutinesApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun fetchHourlyWeatherWithStartDate(
-        lat: Float,
-        lon: Float,
-        startDate: String
+        lat: Float, lon: Float, startDate: String
     ): Flow<List<WeatherHourly>> {
-        if (isNetworkAvailable()) {
-            Log.d("GetWeatherResultsHourly: ", "starting API call")
-            val endDate = addOneDay(startDate)
-            val result = WeatherApi.getHourlyWeatherWithTimeInterval(
-                lat,
-                lon,
-                startDate,
-                endDate
-            )
-            Log.d("GetWeatherResultsHourly: ", result.body().toString())  // Checking the results
-            if (result.isSuccessful && result.body() != null) {
-                val resultBody = result.body()!!  // Extract WeatherData from the response
-                weatherHourlyDisplay = WeatherConverter().getHourlyWeatherDisplay(resultBody)
-                Log.d(
-                    "GetWeatherResultsHourly:",
-                    "list of result converted: " + weatherHourlyDisplay.toString()
-                )
-                hourlyUnits = WeatherConverter().getHourlyUnits(resultBody)
-                Log.d("GetWeatherResultsHourly:", "daily units: " + hourlyUnits.toString())
 
+        if (!isNetworkAvailable()) return emptyFlow()
+        val endDate = addOneDay(startDate)
+        val result = WeatherApi.getHourlyWeatherWithTimeInterval(
+            lat, lon, startDate, endDate
+        )
+        if (!result.isSuccessful || result.body() == null) {
+            return emptyFlow()
+        }
+        val resultBody = result.body()!!  // Extract WeatherData from the response
+        val weatherHourlyDisplay = WeatherConverter().getHourlyWeatherDisplay(resultBody)
+        val weatherHourly = apiDataToWeatherHourly(weatherHourlyDisplay)
 
+        var display = mutableListOf<WeatherHourly>()
+        display = if (LocalDate.now().toString() == startDate) {
+            getHourlyWeatherOfToday(weatherHourly)
+        } else {
+            getHourlyWeatherOfOtherDay(weatherHourly, startDate)
+        }
+        return flow { emit(display) }
 
-                replaceHourlyWeatherDataInDb()
+    }
 
-                //delay(500)
-
-                if (LocalDate.now().toString() == startDate){
-                    return getHourlyWeatherFromCurrentTimeFromDb()
-                }
-                return weatherHourlyDao.getAllAfter(startDate, endDate)
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getHourlyWeatherOfOtherDay(
+        weatherHourly: MutableList<WeatherHourly>, startDate: String
+    ): MutableList<WeatherHourly> {
+        val newList: MutableList<WeatherHourly> = mutableListOf()
+        for (element in weatherHourly) {
+            val dateTime = LocalDateTime.parse(element.time)
+            val date = dateTime.toLocalDate()
+            if (date == LocalDate.parse(startDate)) {
+                newList.add(element)
             }
         }
-        return weatherHourlyDao.getAll()
+        return newList
+    }
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getHourlyWeatherOfToday(weatherHourly: MutableList<WeatherHourly>): MutableList<WeatherHourly> {
+        val newList: MutableList<WeatherHourly> = mutableListOf()
+        for (element in weatherHourly) {
+            val dateTime = LocalDateTime.parse(element.time)
+            val date = dateTime.toLocalDate()
+            if (dateTime >= LocalDateTime.now() && date == LocalDate.now()) {
+                Log.d("MODEL", element.time)
+                newList.add(element)
+            }
+
+        }
+        return newList
     }
 
 
@@ -191,11 +202,11 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
     }
 
 
-    private suspend fun replaceWeatherDataInDb() {
+    private suspend fun replaceWeatherDataInDb(weatherDisplay: List<DailyWeatherDisplay>) {
         //weatherDao.deleteAll()
         val weatherList: MutableList<Weather> = mutableListOf()
         var dayNumber = 1L
-        for (weather in weatherDisplay!!) {
+        for (weather in weatherDisplay) {
             val weatherData = Weather(
                 id = dayNumber++,
                 time = weather.time,
@@ -207,11 +218,10 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         weatherDao.insertAll(weatherList)
     }
 
-    private suspend fun replaceHourlyWeatherDataInDb() {
-        //weatherHourlyDao.deleteAll()
+    private fun apiDataToWeatherHourly(weatherHourlyDisplay: List<HourlyDataDisplay>): MutableList<WeatherHourly> {
         val weatherHourlyList: MutableList<WeatherHourly> = mutableListOf()
         var dayNumber = 1L
-        for (weather in weatherHourlyDisplay!!) {
+        for (weather in weatherHourlyDisplay) {
             val weatherHourly = WeatherHourly(
                 id = dayNumber++,
                 time = weather.time,
@@ -224,7 +234,7 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
             )
             weatherHourlyList.add(weatherHourly)
         }
-        weatherHourlyDao.insertAll(weatherHourlyList)
+        return weatherHourlyList
     }
 
     suspend fun searchPlaces(query: String): Flow<List<PlaceData>> = flow {
