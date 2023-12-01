@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListSevenDays(
+fun ListSevenDaysLandscape(
     sevenDayWeather: List<Weather>,
     selectedDate: String,
     convertDateToWeekday: (String) -> String,
@@ -54,8 +54,7 @@ fun ListSevenDays(
                 }
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceEvenly
 
