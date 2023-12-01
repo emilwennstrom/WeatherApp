@@ -8,6 +8,7 @@ import algot.emil.ui.screen.components.TopBar
 import algot.emil.ui.viewmodel.WeatherVM
 import android.content.res.Configuration
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -42,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -87,6 +89,7 @@ private fun PortraitScreen(
     val topBarState by vm.topBarState.collectAsState()
     val sevenDayWeather by vm.allWeather.collectAsState()
     val hourlyWeather by vm.allWeatherHourly.collectAsState()
+    val selectedDate by vm.currentDate.collectAsState()
 
 
 
@@ -134,6 +137,7 @@ private fun PortraitScreen(
         ) {
             ListSevenDays(
                 sevenDayWeather = sevenDayWeather,
+                selectedDate = selectedDate,
                 vm::convertDateToWeekday,
                 vm::updateHourly
             )
@@ -215,12 +219,14 @@ fun ListHourly(hourlyWeather: List<WeatherHourly>, modifier: Modifier = Modifier
 @Composable
 fun ListSevenDays(
     sevenDayWeather: List<Weather>,
+    selectedDate: String,
     convertDateToWeekday: (String) -> String,
     updateHourly: (String) -> Unit
 ) {
 
     LazyRow {
         items(sevenDayWeather) { weather ->
+            Log.d("view", weather.time.toString())
             Card(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -229,10 +235,17 @@ fun ListSevenDays(
                 onClick = {
                     updateHourly(weather.time)
                 },
-                colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                colors = if (weather.time == selectedDate) {
+                    CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.inversePrimary,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                } else {
+                    CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             ) {
                 Column(
                     modifier = Modifier

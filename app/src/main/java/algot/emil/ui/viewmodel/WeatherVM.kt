@@ -16,12 +16,17 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.Locale
 
@@ -56,6 +61,9 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
     private val _places = MutableStateFlow(emptyList<PlaceData>())
     val places = _places.asStateFlow()
 
+    private val _currentDate = MutableStateFlow("")
+    val currentDate = _currentDate.asStateFlow()
+
     fun getConnectivity(): Boolean {
         return weatherModel.isNetworkAvailable()
     }
@@ -74,22 +82,6 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
         }
     }
 
-
-    private fun getWeatherFromDb() {
-        viewModelScope.launch {
-            launch {
-                weatherModel.sevenDayWeather.collect { wList ->
-                    _allWeather.value = wList // setting the list
-                }
-            }
-            launch {
-                weatherModel.getHourlyWeatherFromCurrentTimeFromDb().collect { wList ->
-                    _allWeatherHourly.value = wList // setting the list
-                }
-            }
-        }
-    }
-
     fun updateWeatherFromQuery(placeData: PlaceData) {
         if (getConnectivity()) {
             viewModelScope.launch {
@@ -104,7 +96,11 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                     }
                 }
                 launch {
-                    weatherModel.fetchHourlyWeatherWithStartDate(lat, lon, LocalDate.now().toString())
+                    weatherModel.fetchHourlyWeatherWithStartDate(
+                        lat,
+                        lon,
+                        LocalDate.now().toString()
+                    )
                         .collect {
                             _allWeatherHourly.value = it
                         }
@@ -118,7 +114,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                         )
                     )
                 }
-                
+
             }
             updateTopBarTextField("")
             _topBarState.value =
@@ -161,34 +157,20 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                         weatherModel.fetchHourlyWeatherWithStartDate(
                             latitude, longitude, time
                         ).collect {
-                            _allWeatherHourly.value = it
-                            for (element in it) {
-                                Log.d(TAG, element.time)
+                            if (it.isNotEmpty()){
+                                _allWeatherHourly.value = it
+                                val dateTime = LocalDateTime.parse(it[0].time)
+                                _currentDate.value = dateTime.toLocalDate().toString()
                             }
-                            if (it.isEmpty()) {
-                                Log.d(TAG, "IT was empty")
-                            }
+
                         }
                     }
-
                 } else {
                     Log.d(TAG, "Null coordinates")
                 }
             }
         }
     }
-
-
-    //weatherModel.fetchWeatherNextHoursWithStartDate(reformatedTime)
-    //weatherModel.allWeatherHourlyFromTime(reformatedTime)
-    //launch {
-    //    weatherModel.allWeatherHourlyFromTime(reformatedTime)
-    //    weatherModel.allWeatherHourlyFromTime.collect {
-    //            wList ->
-    //        _allWeatherHourly.value = wList // setting the list
-    //    }
-    //}
-
 
     override fun convertDateToWeekday(dateStr: String): String {
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -203,32 +185,47 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
 
     init {
         getCurrentPlaceName()
-        if (getConnectivity()) {
-            viewModelScope.launch {
-                placeRepository.getPlace().collect {
-                    val current = it
-                    if (current != null) {
-                        launch {
-                            weatherModel.fetchHourlyWeatherWithStartDate(
-                                current.latitude,
-                                current.longitude,
-                                LocalDate.now().toString()
-                            ).collect { hourly ->
-                                _allWeatherHourly.value = hourly
+        viewModelScope.launch {
+            try {
+                if (getConnectivity()) {
+                   val currentPlace = placeRepository.getPlace().firstOrNull()
+                    if (getConnectivity() && currentPlace != null) {
+                        val lat = currentPlace.latitude
+                        val lon = currentPlace.longitude
+                       launch {
+                            weatherModel.fetchHourlyWeatherWithStartDate(lat, lon, LocalDate.now().toString()).collect {
+                                _allWeatherHourly.value = it
                             }
                         }
                         launch {
-                            weatherModel.fetchWeatherNextSevenDays(current.latitude, current.longitude)
-                                .collect { weekly ->
-                                    _allWeather.value = weekly
-                                }
+                            weatherModel.fetchWeatherNextSevenDays(lat, lon).collect {
+                                _allWeather.value = it
+                            }
                         }
-
+                    }
+                } else {
+                    launch {
+                        weatherModel.sevenDayWeather.collect { weatherList ->
+                            _allWeather.value = weatherList
+                        }
+                    }
+                    launch {
+                        weatherModel.getHourlyWeatherFromCurrentTimeFromDb()
+                            .collect { weatherList -> _allWeatherHourly.value = weatherList }
                     }
                 }
+            } catch (e: Exception) {
+                Log.d(TAG, e.toString())
             }
-        } else {
-            getWeatherFromDb()
+            launch {
+                val weather = weatherModel.getSavedWeatherDate().firstOrNull()
+                if (weather != null) {
+                    val dateTime = LocalDateTime.parse(weather.time)
+                    _currentDate.value = dateTime.toLocalDate().toString()
+                }
+
+            }
+
         }
     }
 

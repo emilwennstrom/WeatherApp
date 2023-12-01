@@ -15,13 +15,11 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -172,7 +170,7 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
         for (element in weatherHourly) {
             val dateTime = LocalDateTime.parse(element.time)
             val date = dateTime.toLocalDate()
-            if (dateTime >= LocalDateTime.now() && date == LocalDate.now()) {
+            if (dateTime >= LocalDateTime.now().minusHours(1) && date == LocalDate.now()) {
                 newList.add(element)
             }
 
@@ -236,6 +234,11 @@ class WeatherModel(persistenceContext: PersistenceContext, connectivity: Connect
             }
         }
         emit(result)
+    }
+
+    fun getSavedWeatherDate(): Flow<WeatherHourly> {
+        Log.d(TAG, "Im getting called") // this method isnt even getting called
+        return weatherHourlyDao.getFirst()
     }
 
 
