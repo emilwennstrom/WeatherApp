@@ -16,13 +16,10 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -202,6 +199,7 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                                 _allWeather.value = it
                             }
                         }
+                        _currentDate.value = LocalDate.now().toString()
                     }
                 } else {
                     launch {
@@ -213,18 +211,19 @@ class WeatherVM(application: Application) : AndroidViewModel(application = appli
                         weatherModel.getHourlyWeatherFromCurrentTimeFromDb()
                             .collect { weatherList -> _allWeatherHourly.value = weatherList }
                     }
+                    launch {
+                        val lastWeatherDate = weatherModel.getSavedWeatherDate().firstOrNull()
+                        if (lastWeatherDate != null) {
+                            val dateTime = LocalDateTime.parse(lastWeatherDate.time)
+                            _currentDate.value = dateTime.toLocalDate().toString()
+                        }
+
+                    }
                 }
             } catch (e: Exception) {
                 Log.d(TAG, e.toString())
             }
-            launch {
-                val weather = weatherModel.getSavedWeatherDate().firstOrNull()
-                if (weather != null) {
-                    val dateTime = LocalDateTime.parse(weather.time)
-                    _currentDate.value = dateTime.toLocalDate().toString()
-                }
 
-            }
 
         }
     }

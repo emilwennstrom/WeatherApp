@@ -13,7 +13,7 @@ interface WeatherHourlyDao {
     @Query(value = "SELECT * FROM WeatherHourly")
     fun getAll(): Flow<List<WeatherHourly>>
 
-    @Query("SELECT * FROM WeatherHourly WHERE time > :startTime AND time < :endTime" )
+    @Query("SELECT * FROM WeatherHourly WHERE time >= :startTime AND time < :endTime" )
     fun getAllAfter(startTime: String, endTime: String): Flow<List<WeatherHourly>>
 
     @Query(value = "SELECT * FROM WeatherHourly WHERE id = :id")
